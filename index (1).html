@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>롤캐 모바일용</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* 버튼 크기 조정 */
+        .menu-button {
+            padding: 5px 10px; /* 버튼 크기 줄임 */
+            font-size: 14px; /* 폰트 크기 줄임 */
+            margin: 2px; /* 버튼 간격 조정 */
+        } 
+                /* 추가 스타일: 전체 레이아웃과 스크롤 방지 */
+        html, body {
+            height: 100%; /* html, body 높이 100% 설정 */
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* body 스크롤 방지 */
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column; /* 모바일에서는 세로 배치 */
+            height: 100%; /* container 높이 100% 설정 */
+            overflow: hidden;
+        }
+        .app_banner_container__8\+G2L.app_banner_is_fixed__vD7c- {
+    display: none !important;
+        }
+        /* 멀티뷰 스타일 */
+        .multiview-container {
+            display: grid;
+            gap: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .multiview-item {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .multiview-item iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 상단: 버튼 메뉴 -->
+        <div class="menu-section" id="menu-section">
+            <button id="hrm-btn" class="menu-button">흐름</button>
+            <button id="youtube-btn" class="menu-button">숙제1</button>
+            <button id="forest-btn" class="menu-button">숙제2</button>
+            <button id="flow-btn" class="menu-button">flow</button>
+            <button id="favorite-btn" class="menu-button">즐찾</button>
+            <button id="refresh-btn" class="menu-button">F5</button>
+            <button id="input-btn" class="menu-button">입력</button>
+        </div>
+
+        <!-- 중간: 영상 표시 -->
+        <div class="video-section" id="video-section">
+            <iframe
+                id="video-iframe"
+                src=""
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+            ></iframe>
+        </div>
+
+        <!-- 하단: 채팅창 -->
+        <div class="chat-section">
+            <iframe
+                id="chat-iframe"
+                src=""
+                frameborder="0"
+            ></iframe>
+        </div>
+    </div>
+
+<div id="input-modal" style="display: none;">
+    <div style="display: flex; flex-direction: column;">
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+            <input type="checkbox" id="multiview-checkbox" style="margin-right: 5px;">
+            <label for="multiview-checkbox">멀티뷰 사용</label>
+        </div>
+        <div id="single-url-input-container">
+            <input type="text" id="url-input" class="url-input" placeholder="URL 입력" style="width: 100%; margin-bottom: 10px;" />
+        </div>
+        <div id="multiview-options" style="display: none;">
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <label for="multiview-layout-select" style="margin-right: 10px;">분할:</label>
+                <select id="multiview-layout-select">
+                    <option value="1">1분할</option>
+                    <option value="2">2분할</option>
+                    <option value="3">3분할</option>
+                    <option value="4">4분할</option>
+                </select>
+            </div>
+            <div id="multiview-url-inputs">
+                <!-- 동적으로 URL 입력 필드가 추가됩니다 -->
+            </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <button id="go-btn" class="menu-button" style="flex-grow: 1; margin-right: 5px;">Go</button>
+            <button id="close-btn" class="menu-button" style="background-color: #dc3545; color: white;">닫기</button>
+        </div>
+        <div style="margin-top: 10px; color: #666; font-size: 12px; word-wrap: break-word;">
+            ex) 롤캐직링, 기본영상주소, m3u8 다 가능
+        </div>
+    </div>
+</div>
+
+<div id="favorite-modal" style="display: none;">
+  <div style="display: flex; flex-direction: column; align-items: center;">
+    <h3>즐겨찾기 목록</h3>
+    <input
+      type="text"
+      id="favorite-name-input"
+      placeholder="이름 입력"
+      class="favorite-input"
+      style="flex: 1;"
+    />
+    <div class="input-row">
+      <input
+        type="text"
+        id="favorite-url-input"
+        placeholder="주소 입력"
+        class="favorite-input"
+      />
+    </div>
+    <button id="add-favorite-btn" class="menu-button">추가</button>
+  </div>
+  <ul id="favorite-list" style="list-style-type: none; padding: 0; width: 100%;">
+    <!-- 즐겨찾기 항목이 여기에 동적으로 추가됩니다 -->
+  </ul>
+  <div class="button-container">
+    <button id="close-favorite-modal" class="menu-button" style="background-color: #dc3545; color: white;">닫기</button>
+  </div>
+</div>
+
+    <script>
+        // SameSite=None 쿠키 설정 함수
+        function setSameSiteNoneCookie(name, value, days) {
+            let expires = "";
+            if (days) {
+                const date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            document.cookie = `${name}=${value}${expires}; path=/; SameSite=None`;
+        }
+
+        // 레이아웃 조정 함수
+        function design() {
+            const isMobile = window.innerWidth <= 900; // 모바일 화면 기준 (900px 이하)
+            const menuSection = document.getElementById('menu-section');
+            const videoSection = document.getElementById('video-section');
+            const chatSection = document.querySelector('.chat-section');
+
+            if (isMobile) {
+                // 모바일: 상하 레이아웃
+                menuSection.style.position = "relative";
+                menuSection.style.width = "100%";
+                menuSection.style.height = "auto";
+                menuSection.style.display = "flex";
+                menuSection.style.justifyContent = "space-around";
+                menuSection.style.padding = "10px 0";
+
+                videoSection.style.width = "100%";
+                videoSection.style.height = "35vh"; // 영상 영역 높이
+                videoSection.style.position = "relative";
+
+                chatSection.style.width = "100%";
+                chatSection.style.height = "53vh"; // 채팅 영역 높이
+                chatSection.style.position = "relative";
+            } else {
+                // PC: 좌우 레이아웃
+                menuSection.style.position = "absolute";
+                menuSection.style.top = "0";
+                menuSection.style.right = "0";
+                menuSection.style.width = "20%"; // 우측 20% 너비
+                menuSection.style.height = "auto";
+                menuSection.style.display = "flex";
+                menuSection.style.flexDirection = "row"; // 버튼을 가로로 배치
+                menuSection.style.justifyContent = "space-around"; // 버튼 간격 조정
+                menuSection.style.alignItems = "center"; // 버튼을 중앙 정렬
+                menuSection.style.paddingTop = "10px"; // 상단 여백 추가
+
+                videoSection.style.width = "80%"; // 좌측 80% 너비
+                videoSection.style.height = "100vh"; // 영상 영역 높이
+                videoSection.style.position = "absolute";
+                videoSection.style.left = "0";
+
+                chatSection.style.width = "20%"; // 우측 20% 너비
+                chatSection.style.height = "calc(100vh - 60px)"; // 채팅 영역 높이 (버튼 메뉴 높이 제외)
+                chatSection.style.position = "absolute";
+                chatSection.style.top = "60px"; // 버튼 메뉴 높이만큼 아래로 이동
+                chatSection.style.right = "0";
+            }
+        }
+
+        // 초기 로드 시 실행
+        window.onload = function() {
+            const chatIframe = document.getElementById('chat-iframe');
+            const lgicurl = 'https://insagirl-toto.appspot.com/chatting/lgic/';
+            if(location.hash && location.hash.substring(1)) {
+                chatIframe.src = lgicurl + '#' + decodeURIComponent(location.hash.substring(1));
+            } else {
+                chatIframe.src = lgicurl;
+            }
+            design(); // 초기 레이아웃 설정
+        };
+
+        // "흐름" 버튼 클릭 이벤트 추가
+        const hrmBtn = document.getElementById('hrm-btn');
+        hrmBtn.addEventListener('click', () => {
+            const url = 'https://insagirl-toto.appspot.com/hrm/?where=1';
+            window.open(url, '_blank');
+        });
+
+        // 화면 크기 변경시 레이아웃 조정
+        window.onresize = design;
+
+        // F5 버튼 클릭 시 채팅창 새로고침 (해시 유지)
+        const refreshBtn = document.getElementById('refresh-btn');
+        refreshBtn.addEventListener('click', () => {
+            const chatIframe = document.getElementById('chat-iframe');
+            if (chatIframe) {
+                const lgicurl = 'https://insagirl-toto.appspot.com/chatting/lgic/';
+                const hash = window.location.hash; // 현재 해시 값을 가져옴
+                chatIframe.src = lgicurl + hash + '?cache=' + Math.random(); // 해시를 포함한 새로운 URL로 업데이트
+            }
+        });
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>
