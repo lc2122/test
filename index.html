@@ -210,12 +210,17 @@
             } else {
                 // PC: 좌우 레이아웃
                 menuSection.style.position = "relative";
-                menuSection.style.width = "100%";
+                menuSection.style.top = "0";
+                menuSection.style.right = "0";
+                menuSection.style.width = "320px"; // 우측 20% 너비
                 menuSection.style.height = "auto";
                 menuSection.style.display = "flex";
-                menuSection.style.justifyContent = "space-around";
-                menuSection.style.padding = "10px 0";
+                menuSection.style.flexDirection = "row"; // 버튼을 가로로 배치
+                menuSection.style.justifyContent = "space-around"; // 버튼 간격 조정
+                menuSection.style.alignItems = "center"; // 버튼을 중앙 정렬
+                menuSection.style.paddingTop = "10px"; // 상단 여백 추가
 
+               
                 videoSection.style.width = (w - 320) + "px"; // 영상 영역 너비
                 videoSection.style.height = "100%";   // 영상 영역 높이
                 videoSection.style.position = "relative";
