@@ -172,68 +172,66 @@
         }
 
         // 레이아웃 조정 함수 (수정됨)
-       function design() {
-            var win = window;
-            var doc = document;
-            var docElem = doc.documentElement;
-            var body = doc.getElementsByTagName('body')[0];
-            var w = win.innerWidth || docElem.clientWidth || body.clientWidth;
-            var h = win.innerHeight || docElem.clientHeight || body.clientHeight;
-            var wg = getUtility(getVideoarea(w - 320, h, 16, 9), 192 * 108 * 10) + getUtility(240 * h, 24 * 20 * 10);
-            var hgh = h - 200 > w * 9 / 16 + 25 ? w * 9 / 16 + 25 : h - 200;
-            var hg = getUtility(getVideoarea(w, hgh, 16, 9), 192 * 108 * 10) + getUtility((w > 240 ? 240 : w) * (h - hgh), 24 * 20 * 10);
+function design() {
+    var win = window;
+    var doc = document;
+    var docElem = doc.documentElement;
+    var body = doc.getElementsByTagName('body')[0];
+    var w = win.innerWidth || docElem.clientWidth || body.clientWidth;
+    var h = win.innerHeight || docElem.clientHeight || body.clientHeight;
+    var wg = getUtility(getVideoarea(w - 320, h, 16, 9), 192 * 108 * 10) + getUtility(240 * h, 24 * 20 * 10);
+    var hgh = h - 200 > w * 9 / 16 + 25 ? w * 9 / 16 + 25 : h - 200;
+    var hg = getUtility(getVideoarea(w, hgh, 16, 9), 192 * 108 * 10) + getUtility((w > 240 ? 240 : w) * (h - hgh), 24 * 20 * 10);
 
-            const menuSection = document.getElementById('menu-section');
-            const videoSection = document.getElementById('video-section');
-            const chatSection = document.querySelector('.chat-section');
-             const videoIframe = document.getElementById('video-iframe');
-            const chatIframe = document.getElementById('chat-iframe');
+    const menuSection = document.getElementById('menu-section');
+    const videoSection = document.getElementById('video-section');
+    const chatSection = document.querySelector('.chat-section');
+    const videoIframe = document.getElementById('video-iframe');
+    const chatIframe = document.getElementById('chat-iframe');
 
-           if (hg > wg) {
-                // 모바일: 상하 레이아웃
-                menuSection.style.position = "relative";
-                menuSection.style.width = "100%";
-                menuSection.style.height = "auto";
-                menuSection.style.display = "flex";
-                menuSection.style.justifyContent = "space-around";
-                menuSection.style.padding = "10px 0";
+    if (hg > wg) {
+        // 모바일: 상하 레이아웃 (기존 코드 유지)
+        menuSection.style.position = "relative";
+        menuSection.style.width = "100%";
+        menuSection.style.height = "auto";
+        menuSection.style.display = "flex";
+        menuSection.style.justifyContent = "space-around";
+        menuSection.style.padding = "10px 0";
 
+        videoSection.style.width = "100%";
+        videoSection.style.height = hgh + "px";
+        videoSection.style.position = "relative";
 
-               videoSection.style.width = "100%";
-                videoSection.style.height = hgh + "px"; //  이부분
-                videoSection.style.position = "relative";
+        chatSection.style.width = "100%";
+        chatSection.style.height = (h - hgh) + "px";
+        chatSection.style.position = "relative";
 
-                chatSection.style.width = "100%";
-               chatSection.style.height = (h - hgh) + "px"; // 이부분
-                chatSection.style.position = "relative";
-
-            } else {
-                // PC: 좌우 레이아웃
-                menuSection.style.position = "relative";
-                menuSection.style.top = "0";
-                menuSection.style.right = "0";
-                menuSection.style.width = "320px"; // 우측 20% 너비
-                menuSection.style.height = "auto";
-                menuSection.style.display = "flex";
-                menuSection.style.flexDirection = "row"; // 버튼을 가로로 배치
-                menuSection.style.justifyContent = "space-around"; // 버튼 간격 조정
-                menuSection.style.alignItems = "center"; // 버튼을 중앙 정렬
-                menuSection.style.paddingTop = "10px"; // 상단 여백 추가
-
-               
-                videoSection.style.width = (w - 320) + "px"; // 영상 영역 너비
-                videoSection.style.height = "100%";   // 영상 영역 높이
-                videoSection.style.position = "relative";
-                videoSection.style.float = "left";      // 왼쪽에 배치
+    } else {
+        // PC: 좌우 레이아웃 (수정)
+        menuSection.style.position = "relative";
+        menuSection.style.width = "320px"; // 버튼 메뉴 너비를 채팅과 동일하게
+        menuSection.style.height = "auto";
+        menuSection.style.display = "flex";
+        menuSection.style.flexDirection = "column"; // 버튼을 세로로 배열
+        menuSection.style.justifyContent = "flex-start"; // 버튼을 위쪽 정렬
+        menuSection.style.padding = "10px";
+        menuSection.style.float = "right"; // 오른쪽에 배치
 
 
-                chatSection.style.width = "320px";      // 채팅 영역 너비
-                chatSection.style.height = "100%";        // 채팅 영역 높이
-                chatSection.style.position = "relative";
-                chatSection.style.float = "right";     // 오른쪽에 배치
+        videoSection.style.width = (w - 320) + "px";
+        videoSection.style.height = "100%";
+        videoSection.style.position = "relative";
+        videoSection.style.float = "left";
 
-            }
-        }
+
+        chatSection.style.width = "320px";
+        chatSection.style.height = "calc(100% - " + menuSection.offsetHeight + "px)"; // 중요: 버튼 메뉴 높이만큼 빼줌
+        chatSection.style.position = "relative";
+        chatSection.style.float = "right";
+        chatSection.style.top = "0";       // top 위치 초기화
+
+    }
+}
 
 
 
