@@ -291,7 +291,7 @@ function design() {
         const lgicurl = 'https://insagirl-toto.appspot.com/chatting/lgic/';
         const hash = encodeURIComponent(window.location.hash); // Encode the hash
         const cacheBust = Math.random();
-        chatIframe.src = `${lgicurl}${hash}?cache=${cacheBust}`; // Template literals for clarity
+        chatIframe.src = lgicurl + hash + '?cache=' + Date.now();
         console.log(chatIframe.src); // Verify the constructed URL
     }
 });
