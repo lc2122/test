@@ -285,15 +285,14 @@ function design() {
         window.onresize = design;
 
         // F5 버튼 클릭 시 채팅창 새로고침 (해시 유지)
+        const refreshBtn = document.getElementById('refresh-btn');
         refreshBtn.addEventListener('click', () => {
-    const chatIframe = document.getElementById('chat-iframe');
-    if (chatIframe) {
-        const lgicurl = 'https://insagirl-toto.appspot.com/chatting/lgic/';
-        const hash = encodeURIComponent(window.location.hash); // Encode the hash
-        const cacheBust = Math.random();
-        chatIframe.src = lgicurl + hash + '?cache=' + Date.now();
-        console.log(chatIframe.src); // Verify the constructed URL
-    }
+            const chatIframe = document.getElementById('chat-iframe');
+            if (chatIframe) {
+                const lgicurl = 'https://insagirl-toto.appspot.com/chatting/lgic/';
+                const hash = window.location.hash; // 현재 해시 값을 가져옴
+                chatIframe.src = lgicurl + hash + '?cache=' + Math.random(); // 해시를 포함한 새로운 URL로 업데이트
+            }
 });
     </script>
     <script src="script.js"></script>
