@@ -179,7 +179,7 @@ function design() {
     var body = doc.getElementsByTagName('body')[0];
     var w = win.innerWidth || docElem.clientWidth || body.clientWidth;
     var h = win.innerHeight || docElem.clientHeight || body.clientHeight;
-    var wg = getUtility(getVideoarea(w - 320, h, 16, 9), 192 * 108 * 10) + getUtility(240 * h, 24 * 20 * 10);
+    var wg = getUtility(getVideoarea(w - 360, h, 16, 9), 192 * 108 * 10) + getUtility(240 * h, 24 * 20 * 10);
     var hgh = h - 200 > w * 9 / 16 + 25 ? w * 9 / 16 + 25 : h - 200;
     var hg = getUtility(getVideoarea(w, hgh, 16, 9), 192 * 108 * 10) + getUtility((w > 240 ? 240 : w) * (h - hgh), 24 * 20 * 10);
 
@@ -219,7 +219,7 @@ function design() {
 
         // 우측 영역 (버튼 + 채팅) 컨테이너
         const rightContainer = document.createElement('div');
-        rightContainer.style.width = '320px';
+        rightContainer.style.width = '360px';
         rightContainer.style.height = '100%';
         rightContainer.style.float = 'right'; // 오른쪽에 배치
 
@@ -253,7 +253,7 @@ function design() {
 
 
         // videoSection 스타일 (pcContainer 안으로 이동)
-        videoSection.style.width = (w - 320) + "px";
+        videoSection.style.width = (w - 360) + "px";
         videoSection.style.height = "100%";
         videoSection.style.position = "relative";
         videoSection.style.float = "left"; // 왼쪽 배치 유지
