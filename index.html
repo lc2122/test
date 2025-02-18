@@ -209,16 +209,17 @@ function design() {
     } else {
         // PC: 좌우 레이아웃 (수정)
         menuSection.style.position = "relative";
+        menuSection.style.top = "0";
+        menuSection.style.right = "0";
         menuSection.style.width = "320px"; // 버튼 메뉴 너비를 채팅과 동일하게
         menuSection.style.height = "auto";
         menuSection.style.display = "flex";
         menuSection.style.flexDirection = "row"; // 버튼을 세로로 배열
-        menuSection.style.justifyContent = "flex-start"; // 버튼을 위쪽 정렬
-        menuSection.style.padding = "10px";
-        menuSection.style.float = "right"; // 오른쪽에 배치
+        menuSection.style.justifyContent = "space-around"; // 버튼 간격 조정
+        menuSection.style.paddingTop = "10px"
 
 
-        videoSection.style.width = (w - 320) + "px";
+        videoSection.style.width = (w - 321) + "px";
         videoSection.style.height = "100%";
         videoSection.style.position = "relative";
         videoSection.style.float = "left";
