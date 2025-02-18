@@ -189,6 +189,7 @@ function design() {
     const videoIframe = document.getElementById('video-iframe');
     const chatIframe = document.getElementById('chat-iframe');
 
+
     if (hg > wg) {
         // 모바일: 상하 레이아웃 (기존 코드 유지)
         menuSection.style.position = "relative";
@@ -208,32 +209,57 @@ function design() {
 
     } else {
         // PC: 좌우 레이아웃 (수정)
+
+        // 전체를 감싸는 컨테이너 생성 (PC 레이아웃에서만)
+        const pcContainer = document.createElement('div');
+        pcContainer.style.display = 'flex';
+        pcContainer.style.height = '100%';
+        pcContainer.style.width = '100%';
+
+
+        // 우측 영역 (버튼 + 채팅) 컨테이너
+        const rightContainer = document.createElement('div');
+        rightContainer.style.width = '320px';
+        rightContainer.style.height = '100%';
+        rightContainer.style.float = 'right'; // 오른쪽에 배치
+
+
         menuSection.style.position = "relative";
-        menuSection.style.top = "0";
-        menuSection.style.right = "0";
-        menuSection.style.width = "320px"; // 버튼 메뉴 너비를 채팅과 동일하게
+        menuSection.style.width = "100%"; // rightContainer에 꽉 차게
         menuSection.style.height = "auto";
         menuSection.style.display = "flex";
-        menuSection.style.flexDirection = "row"; // 버튼을 세로로 배열
-        menuSection.style.justifyContent = "space-around"; // 버튼 간격 조정
-        menuSection.style.paddingTop = "10px"
+        menuSection.style.flexDirection = "row";
+        menuSection.style.justifyContent = "flex-start";
+        menuSection.style.padding = "10px";
+        // float 제거
+
+        chatSection.style.width = "100%";  // rightContainer에 꽉 차게
+        chatSection.style.height = "calc(100% - " + menuSection.offsetHeight + "px)";
+        chatSection.style.position = "relative";
+        // float 제거
+        chatSection.style.top = "0";
+
+        // 요소들을 컨테이너에 추가
+        rightContainer.appendChild(menuSection);
+        rightContainer.appendChild(chatSection);
+
+        pcContainer.appendChild(videoSection); // videoSection은 원래 위치에
+        pcContainer.appendChild(rightContainer);
+
+        // 기존 container 내용을 pcContainer로 교체
+        const container = document.querySelector('.container');
+        container.innerHTML = ''; // 기존 내용 제거
+        container.appendChild(pcContainer);
 
 
-        videoSection.style.width = (w - 321) + "px";
+        // videoSection 스타일 (pcContainer 안으로 이동)
+        videoSection.style.width = (w - 320) + "px";
         videoSection.style.height = "100%";
         videoSection.style.position = "relative";
-        videoSection.style.float = "left";
-
-
-        chatSection.style.width = "320px";
-        chatSection.style.height = "calc(100% - " + menuSection.offsetHeight + "px)"; // 중요: 버튼 메뉴 높이만큼 빼줌
-        chatSection.style.position = "relative";
-        chatSection.style.float = "right";
-        chatSection.style.top = "0";       // top 위치 초기화
+        videoSection.style.float = "left"; // 왼쪽 배치 유지
 
     }
 }
-
 
 
         // 초기 로드 시 실행
