@@ -172,7 +172,7 @@
         }
 
         // 레이아웃 조정 함수 (수정됨)
-        function design() {
+       function design() {
             var win = window;
             var doc = document;
             var docElem = doc.documentElement;
@@ -208,28 +208,25 @@
                 chatSection.style.position = "relative";
 
             } else {
-              // PC: 좌우 레이아웃 (기존 PC 레이아웃 유지)
-                menuSection.style.position = "absolute";
-                menuSection.style.top = "0";
-                menuSection.style.right = "0";
-                menuSection.style.width = "20%"; // 우측 20% 너비
+                // PC: 좌우 레이아웃
+                menuSection.style.position = "relative";
+                menuSection.style.width = "100%";
                 menuSection.style.height = "auto";
                 menuSection.style.display = "flex";
-                menuSection.style.flexDirection = "row"; // 버튼을 가로로 배치
-                menuSection.style.justifyContent = "space-around"; // 버튼 간격 조정
-                menuSection.style.alignItems = "center"; // 버튼을 중앙 정렬
-                menuSection.style.paddingTop = "10px"; // 상단 여백 추가
+                menuSection.style.justifyContent = "space-around";
+                menuSection.style.padding = "10px 0";
 
-                videoSection.style.width = "80%"; // 좌측 80% 너비
-                videoSection.style.height = "100vh"; // 영상 영역 높이
-                videoSection.style.position = "absolute";
-                videoSection.style.left = "0";
+                videoSection.style.width = (w - 320) + "px"; // 영상 영역 너비
+                videoSection.style.height = "100%";   // 영상 영역 높이
+                videoSection.style.position = "relative";
+                videoSection.style.float = "left";      // 왼쪽에 배치
 
-                chatSection.style.width = "20%"; // 우측 20% 너비
-                chatSection.style.height = "calc(100vh - 60px)"; // 채팅 영역 높이 (버튼 메뉴 높이 제외)
-                chatSection.style.position = "absolute";
-                chatSection.style.top = "60px"; // 버튼 메뉴 높이만큼 아래로 이동
-                chatSection.style.right = "0";
+
+                chatSection.style.width = "320px";      // 채팅 영역 너비
+                chatSection.style.height = "100%";        // 채팅 영역 높이
+                chatSection.style.position = "relative";
+                chatSection.style.float = "right";     // 오른쪽에 배치
+
             }
         }
 
