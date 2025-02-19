@@ -3,7 +3,7 @@ const CHANNELS = {
         id: 'UCw1DsweY9b2AKGjV4kGJP1A',
         buttonLabel: '숙제1',
         color: '#FF0000',
-        url: (videoId) => `https://www.youtube.com/embed/${videoId}` // videoId를 동적으로 사용
+        url: (playlistId) => `https://www.youtube.com/embed?listType=playlist&list=${playlistId}&autoplay=1`
     },
     forest: {
         buttonLabel: '숙제2',
