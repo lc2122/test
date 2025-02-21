@@ -3,12 +3,12 @@ const CHANNELS = {
         id: 'UCw1DsweY9b2AKGjV4kGJP1A',
         buttonLabel: '숙제1',
         color: '#FF0000',
-        url: (playlistId) => `https://www.youtube.com/embed?listType=playlist&list=${playlistId}&autoplay=1`
+        url: (id) => `https://www.youtube.com/embed/live_stream?channel=${id}`
     },
     forest: {
         buttonLabel: '숙제2',
         color: '#00aaff',
-        url: () => 'https://play.sooplive.co.kr/aflol/embed'
+        url: () => 'https://play.sooplive.co.kr/aflol/281494910/embed'
     },
     flow: {
         buttonLabel: 'flow',
@@ -325,6 +325,9 @@ addFavoriteBtn.addEventListener('click', () => {
 function transformUrl(url) {
     if (!url) return null;
     const isShortForm = /^(youtube|twitch|chzzk|kick|afreeca)\/[^\/]+$/.test(url);
+    if (url === 'https://play.sooplive.co.kr/aflol/281494910/embed') {
+        return url; // 숙제2 URL은 그대로 반환
+    }
     if (isShortForm) {
         const [platform, channelId] = url.split('/');
         switch (platform) {
@@ -347,7 +350,7 @@ function transformUrl(url) {
     if (url.startsWith('https://twitch.tv/')) return `https://player.twitch.tv/?channel=${url.split('/').pop()}&parent=lc2122.github.io`;
     if (url.startsWith('https://chzzk.naver.com/live/') || url.startsWith('https://chzzk.naver.com/')) return `https://chzzk.naver.com/live/${url.split('/').pop()}`;
     if (url.startsWith('https://kick.com/')) return `https://player.kick.com/${url.split('/').pop()}`;
-    if (url.startsWith('https://play.sooplive.co.kr/')) return `https://play.sooplive.co.kr/${url.split('/').pop()}/embed`;
+ if (url.startsWith('https://play.sooplive.co.kr/')) return `https://play.sooplive.co.kr/${url.split('/')[3]}/embed`; // 수정: 세 번째 segment 사용
     if (url.startsWith('https://')) return url;
     alert('지원하지 않는 URL 형식입니다.'); return null;
 }
