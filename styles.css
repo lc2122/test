@@ -14,7 +14,6 @@ body {
     height: 100%;
 }
 
-
 /* Menu section styles */
 .menu-section {
     display: flex;
@@ -30,7 +29,7 @@ body {
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    background-color: #555; /* Darker gray color */
+    background-color: #555;
 }
 
 /* Input modal styles */
@@ -89,6 +88,7 @@ body {
     margin-bottom: 5px;
 }
 
+/* Go & Close buttons in modal */
 #go-btn, #close-btn {
     width: 50px; 
     padding: 8px;
@@ -96,7 +96,7 @@ body {
 }
 
 #go-btn {
-    background-color: #555; /* Darker gray color */
+    background-color: #555;
     color: white;
     border: none;
     border-radius: 5px;
@@ -104,7 +104,7 @@ body {
 }
 
 #close-btn {
-    background-color: #555; /* Darker gray color */
+    background-color: #555;
     color: white;
     border: none;
     border-radius: 5px;
@@ -147,11 +147,11 @@ body {
     width: 100%;
     height: 100%;
     border: none;
-    zoom: 1.2; /* 120% zoom */
-    overflow: hidden; /*  This line hides the scrollbars */
+    zoom: 1.2;
+    overflow: hidden;
 }
 
-/* 모달 전체 스타일 */
+/* 기존 즐겨찾기 모달 스타일 */
 #favorite-modal {
     position: fixed;
     top: 50%;
@@ -167,14 +167,12 @@ body {
     box-sizing: border-box;
 }
 
-/* 즐겨찾기 목록 스타일 */
 #favorite-list {
-    max-height: 200px; /* 목록 최대 높이 설정 */
-    overflow-y: auto; /* 스크롤 바 활성화 */
-    width: 100%; /* 부모 요소 너비에 맞춤 */
+    max-height: 200px;
+    overflow-y: auto;
+    width: 100%;
 }
 
-/* 리스트 아이템 스타일 */
 #favorite-list li {
     display: flex;
     justify-content: space-between;
@@ -184,10 +182,9 @@ body {
     background-color: #f9f9f9;
     border: 1px solid #ddd;
     border-radius: 5px;
-    word-break: break-all; /* 긴 텍스트가 화면 밖으로 나가는 것을 방지 */
+    word-break: break-all;
 }
 
-/* 삭제 버튼 스타일 */
 #favorite-list li button {
     background-color: #dc3545;
     color: white;
@@ -202,9 +199,8 @@ body {
     background-color: #c82333;
 }
 
-/* 입력 필드 스타일 */
 .favorite-input {
-    height: 40px; /* 이름 입력과 주소 입력의 높이를 동일하게 설정 */
+    height: 40px;
     width: 100%;
     padding: 8px;
     font-size: 14px;
@@ -220,39 +216,37 @@ body {
     margin-bottom: 10px;
 }
 
-
-/* 닫기 버튼을 가운데 정렬하기 위한 컨테이너 */
 .button-container {
     display: flex;
     justify-content: center;
     margin-top: 10px;
 }
 
-
-.favorite-list {
-    max-height: 150px;
-    overflow-y: auto;
+/* 새로 추가: 멀티뷰 즐겨찾기 드래그 영역 스타일 */
+#favorite-drag-container {
+    margin-top: 10px;
+    border: 1px solid #ccc;
     padding: 5px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin: 10px 0;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: #fafafa;
 }
 
-.favorite-list li {
+.favorite-drag-title {
+    font-size: 13px;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.favorite-drag-item {
     padding: 5px;
-    margin: 3px 0;
-    background: #f5f5f5;
+    margin-bottom: 3px;
+    background-color: #e9e9e9;
+    border: 1px solid #ccc;
     border-radius: 3px;
     cursor: move;
-    user-select: none;
 }
 
-.favorite-list li:hover {
-    background: #e0e0e0;
-}
-
-.favorites-dropzone h4 {
-    margin: 10px 0 5px 0;
-    font-size: 14px;
-    color: #666;
+.favorite-drag-item:hover {
+    background-color: #dcdcdc;
 }
