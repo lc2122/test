@@ -11,8 +11,9 @@
             padding: 5px 10px; /* 버튼 크기 줄임 */
             font-size: 14px; /* 폰트 크기 줄임 */
             margin: 2px; /* 버튼 간격 조정 */
-        } 
-                /* 추가 스타일: 전체 레이아웃과 스크롤 방지 */
+        }
+        
+        /* 추가 스타일: 전체 레이아웃과 스크롤 방지 */
         html, body {
             height: 100%; /* html, body 높이 100% 설정 */
             margin: 0;
@@ -27,7 +28,7 @@
             overflow: hidden;
         }
         .app_banner_container__8\+G2L.app_banner_is_fixed__vD7c- {
-    display: none !important;
+            display: none !important;
         }
         /* 멀티뷰 스타일 */
         .multiview-container {
@@ -84,71 +85,75 @@
         </div>
     </div>
 
-<div id="input-modal" style="display: none;">
-    <div style="display: flex; flex-direction: column;">
-        <div style="display: flex; align-items: center; margin-bottom: 10px;">
-            <input type="checkbox" id="multiview-checkbox" style="margin-right: 5px;">
-            <label for="multiview-checkbox">멀티뷰 사용</label>
-        </div>
-        <div id="single-url-input-container">
-            <input type="text" id="url-input" class="url-input" placeholder="URL 입력" style="width: 100%; margin-bottom: 10px;" />
-        </div>
-        <div id="multiview-options" style="display: none;">
+    <!-- 입력 모달 -->
+    <div id="input-modal" style="display: none;">
+        <div style="display: flex; flex-direction: column;">
             <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                <label for="multiview-layout-select" style="margin-right: 10px;">분할:</label>
-                <select id="multiview-layout-select">
-                    <option value="1">1분할</option>
-                    <option value="2">2분할</option>
-                    <option value="3">3분할</option>
-                    <option value="4">4분할</option>
-                </select>
+                <input type="checkbox" id="multiview-checkbox" style="margin-right: 5px;">
+                <label for="multiview-checkbox">멀티뷰 사용</label>
             </div>
-            <div id="multiview-url-inputs">
-                <!-- 동적으로 URL 입력 필드가 추가됩니다 -->
+            <div id="single-url-input-container">
+                <input type="text" id="url-input" class="url-input" placeholder="URL 입력" style="width: 100%; margin-bottom: 10px;" />
             </div>
-                <!-- 추가된 즐겨찾기 영역 -->
-    <div class="favorites-dropzone">
-        <h4>즐겨찾기 (드래그하여 추가)</h4>
-        <ul id="multiview-favorite-list" class="favorite-list"></ul>
+            <div id="multiview-options" style="display: none;">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <label for="multiview-layout-select" style="margin-right: 10px;">분할:</label>
+                    <select id="multiview-layout-select">
+                        <option value="1">1분할</option>
+                        <option value="2">2분할</option>
+                        <option value="3">3분할</option>
+                        <option value="4">4분할</option>
+                    </select>
+                </div>
+                <div id="multiview-url-inputs">
+                    <!-- 동적으로 URL 입력 필드가 추가됩니다 -->
+                </div>
+                <!-- 추가: 즐겨찾기 목록 (멀티뷰용, 드래그 가능) -->
+                <div id="favorite-drag-container">
+                    <p class="favorite-drag-title">즐겨찾기 (드래그하여 입력 필드에 붙여넣기)</p>
+                    <div id="favorite-drag-list">
+                        <!-- 즐겨찾기 항목이 여기에 동적으로 추가됩니다 -->
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <button id="go-btn" class="menu-button" style="flex-grow: 1; margin-right: 5px;">Go</button>
+                <button id="close-btn" class="menu-button" style="background-color: #dc3545; color: white;">닫기</button>
+            </div>
+            <div style="margin-top: 10px; color: #666; font-size: 12px; word-wrap: break-word;">
+                ex) 롤캐직링, 기본영상주소, m3u8 다 가능
+            </div>
+        </div>
     </div>
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <button id="go-btn" class="menu-button" style="flex-grow: 1; margin-right: 5px;">Go</button>
-            <button id="close-btn" class="menu-button" style="background-color: #dc3545; color: white;">닫기</button>
-        </div>
-        <div style="margin-top: 10px; color: #666; font-size: 12px; word-wrap: break-word;">
-            ex) 롤캐직링, 기본영상주소, m3u8 다 가능
-        </div>
-    </div>
-</div>
 
-<div id="favorite-modal" style="display: none;">
-  <div style="display: flex; flex-direction: column; align-items: center;">
-    <h3>즐겨찾기 목록</h3>
-    <input
-      type="text"
-      id="favorite-name-input"
-      placeholder="이름 입력"
-      class="favorite-input"
-      style="flex: 1;"
-    />
-    <div class="input-row">
-      <input
-        type="text"
-        id="favorite-url-input"
-        placeholder="주소 입력"
-        class="favorite-input"
-      />
+    <!-- 기존 즐겨찾기 모달 (독립적으로 동작) -->
+    <div id="favorite-modal" style="display: none;">
+      <div style="display: flex; flex-direction: column; align-items: center;">
+        <h3>즐겨찾기 목록</h3>
+        <input
+          type="text"
+          id="favorite-name-input"
+          placeholder="이름 입력"
+          class="favorite-input"
+          style="flex: 1;"
+        />
+        <div class="input-row">
+          <input
+            type="text"
+            id="favorite-url-input"
+            placeholder="주소 입력"
+            class="favorite-input"
+          />
+        </div>
+        <button id="add-favorite-btn" class="menu-button">추가</button>
+      </div>
+      <ul id="favorite-list" style="list-style-type: none; padding: 0; width: 100%;">
+        <!-- 즐겨찾기 항목이 여기에 동적으로 추가됩니다 -->
+      </ul>
+      <div class="button-container">
+        <button id="close-favorite-modal" class="menu-button" style="background-color: #dc3545; color: white;">닫기</button>
+      </div>
     </div>
-    <button id="add-favorite-btn" class="menu-button">추가</button>
-  </div>
-  <ul id="favorite-list" style="list-style-type: none; padding: 0; width: 100%;">
-    <!-- 즐겨찾기 항목이 여기에 동적으로 추가됩니다 -->
-  </ul>
-  <div class="button-container">
-    <button id="close-favorite-modal" class="menu-button" style="background-color: #dc3545; color: white;">닫기</button>
-  </div>
-</div>
 
     <script>
         // SameSite=None 쿠키 설정 함수
@@ -161,111 +166,98 @@
             }
             document.cookie = `${name}=${value}${expires}; path=/; SameSite=None`;
         }
-    function getVideoarea(w, h, wr, hr){
-          h = h - 25;
-          if(w <= 0 || h <= 0){
-            return 0;
-          } else if(w*hr > h*wr){
-            return h * h * wr / hr;
-          } else {
-            return w * w * hr / wr;
-          }
+
+        function getVideoarea(w, h, wr, hr){
+            h = h - 25;
+            if(w <= 0 || h <= 0){
+                return 0;
+            } else if(w*hr > h*wr){
+                return h * h * wr / hr;
+            } else {
+                return w * w * hr / wr;
+            }
         }
         
         function getUtility(x, n){
-          return x/(x+n);
+            return x/(x+n);
         }
 
         // 레이아웃 조정 함수 (수정됨)
-function design() {
-    var win = window;
-    var doc = document;
-    var docElem = doc.documentElement;
-    var body = doc.getElementsByTagName('body')[0];
-    var w = win.innerWidth || docElem.clientWidth || body.clientWidth;
-    var h = win.innerHeight || docElem.clientHeight || body.clientHeight;
-    var wg = getUtility(getVideoarea(w - 420, h, 16, 9), 192 * 108 * 10) + getUtility(240 * h, 24 * 20 * 10);
-    var hgh = h - 200 > w * 9 / 16 + 25 ? w * 9 / 16 + 25 : h - 200;
-    var hg = getUtility(getVideoarea(w, hgh, 16, 9), 192 * 108 * 10) + getUtility((w > 240 ? 240 : w) * (h - hgh), 24 * 20 * 10);
+        function design() {
+            var win = window;
+            var doc = document;
+            var docElem = doc.documentElement;
+            var body = doc.getElementsByTagName('body')[0];
+            var w = win.innerWidth || docElem.clientWidth || body.clientWidth;
+            var h = win.innerHeight || docElem.clientHeight || body.clientHeight;
+            var wg = getUtility(getVideoarea(w - 420, h, 16, 9), 192 * 108 * 10) + getUtility(240 * h, 24 * 20 * 10);
+            var hgh = h - 200 > w * 9 / 16 + 25 ? w * 9 / 16 + 25 : h - 200;
+            var hg = getUtility(getVideoarea(w, hgh, 16, 9), 192 * 108 * 10) + getUtility((w > 240 ? 240 : w) * (h - hgh), 24 * 20 * 10);
 
-    const menuSection = document.getElementById('menu-section');
-    const videoSection = document.getElementById('video-section');
-    const chatSection = document.querySelector('.chat-section');
-    const videoIframe = document.getElementById('video-iframe');
-    const chatIframe = document.getElementById('chat-iframe');
+            const menuSection = document.getElementById('menu-section');
+            const videoSection = document.getElementById('video-section');
+            const chatSection = document.querySelector('.chat-section');
+            const videoIframe = document.getElementById('video-iframe');
+            const chatIframe = document.getElementById('chat-iframe');
 
+            if (hg > wg) {
+                // 모바일: 상하 레이아웃 (기존 코드 유지)
+                menuSection.style.position = "relative";
+                menuSection.style.width = "100%";
+                menuSection.style.height = "auto";
+                menuSection.style.display = "flex";
+                menuSection.style.justifyContent = "space-around";
+                menuSection.style.padding = "10px 0";
 
-    if (hg > wg) {
-        // 모바일: 상하 레이아웃 (기존 코드 유지)
-        menuSection.style.position = "relative";
-        menuSection.style.width = "100%";
-        menuSection.style.height = "auto";
-        menuSection.style.display = "flex";
-        menuSection.style.justifyContent = "space-around";
-        menuSection.style.padding = "10px 0";
+                videoSection.style.width = "100%";
+                videoSection.style.height = (100 + hgh) + "px";
+                videoSection.style.position = "relative";
 
-        videoSection.style.width = "100%";
-        videoSection.style.height = (100 + hgh) + "px";
-        videoSection.style.position = "relative";
+                chatSection.style.width = "100%";
+                chatSection.style.height = (h - hgh - 100) + "px";
+                chatSection.style.position = "relative";
 
-        chatSection.style.width = "100%";
-        chatSection.style.height = (h - hgh - 100) + "px";
-        chatSection.style.position = "relative";
+            } else {
+                // PC: 좌우 레이아웃 (수정)
+                const pcContainer = document.createElement('div');
+                pcContainer.style.display = 'flex';
+                pcContainer.style.height = '100%';
+                pcContainer.style.width = '100%';
 
-    } else {
-        // PC: 좌우 레이아웃 (수정)
+                const rightContainer = document.createElement('div');
+                rightContainer.style.width = '420px';
+                rightContainer.style.height = '100%';
+                rightContainer.style.float = 'right';
 
-        // 전체를 감싸는 컨테이너 생성 (PC 레이아웃에서만)
-        const pcContainer = document.createElement('div');
-        pcContainer.style.display = 'flex';
-        pcContainer.style.height = '100%';
-        pcContainer.style.width = '100%';
+                menuSection.style.position = "relative";
+                menuSection.style.width = "100%";
+                menuSection.style.height = "auto";
+                menuSection.style.display = "flex";
+                menuSection.style.flexDirection = "row";
+                menuSection.style.justifyContent = "space-around";
+                menuSection.style.padding = "10px";
 
+                chatSection.style.width = "100%";
+                chatSection.style.height = "calc(100% - " + menuSection.offsetHeight + "px)";
+                chatSection.style.position = "relative";
+                chatSection.style.top = "0";
 
-        // 우측 영역 (버튼 + 채팅) 컨테이너
-        const rightContainer = document.createElement('div');
-        rightContainer.style.width = '420px';
-        rightContainer.style.height = '100%';
-        rightContainer.style.float = 'right'; // 오른쪽에 배치
+                rightContainer.appendChild(menuSection);
+                rightContainer.appendChild(chatSection);
 
+                pcContainer.appendChild(videoSection);
+                pcContainer.appendChild(rightContainer);
 
-        menuSection.style.position = "relative";
-        menuSection.style.width = "100%"; // rightContainer에 꽉 차게
-        menuSection.style.height = "auto";
-        menuSection.style.display = "flex";
-        menuSection.style.flexDirection = "row";
-        menuSection.style.justifyContent = "space-around"; // 버튼 간격 조정
-        menuSection.style.padding = "10px";
-        // float 제거
+                const container = document.querySelector('.container');
+                container.innerHTML = '';
+                container.appendChild(pcContainer);
 
-        chatSection.style.width = "100%";  // rightContainer에 꽉 차게
-        chatSection.style.height = "calc(100% - " + menuSection.offsetHeight + "px)";
-        chatSection.style.position = "relative";
-        // float 제거
-        chatSection.style.top = "0";
-
-        // 요소들을 컨테이너에 추가
-        rightContainer.appendChild(menuSection);
-        rightContainer.appendChild(chatSection);
-
-        pcContainer.appendChild(videoSection); // videoSection은 원래 위치에
-        pcContainer.appendChild(rightContainer);
-
-        // 기존 container 내용을 pcContainer로 교체
-        const container = document.querySelector('.container');
-        container.innerHTML = ''; // 기존 내용 제거
-        container.appendChild(pcContainer);
-
-
-        // videoSection 스타일 (pcContainer 안으로 이동)
-        videoSection.style.width = (w - 420) + "px";
-        videoSection.style.height = "100%";
-        videoSection.style.position = "relative";
-        videoSection.style.float = "left"; // 왼쪽 배치 유지
-
-    }
-}
-
+                videoSection.style.width = (w - 420) + "px";
+                videoSection.style.height = "100%";
+                videoSection.style.position = "relative";
+                videoSection.style.float = "left";
+            }
+        }
 
         // 초기 로드 시 실행
         window.onload = function() {
@@ -295,10 +287,10 @@ function design() {
             const chatIframe = document.getElementById('chat-iframe');
             if (chatIframe) {
                 const lgicurl = 'https://insagirl-toto.appspot.com/chatting/lgic/';
-                const hash = window.location.hash; // 현재 해시 값을 가져옴
-                chatIframe.src = lgicurl + hash + '?cache=' + Math.random(); // 해시를 포함한 새로운 URL로 업데이트
+                const hash = window.location.hash;
+                chatIframe.src = lgicurl + hash + '?cache=' + Math.random();
             }
-});
+        });
     </script>
     <script src="script.js"></script>
 </body>
