@@ -227,3 +227,32 @@ body {
     justify-content: center;
     margin-top: 10px;
 }
+
+
+.favorite-list {
+    max-height: 150px;
+    overflow-y: auto;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+.favorite-list li {
+    padding: 5px;
+    margin: 3px 0;
+    background: #f5f5f5;
+    border-radius: 3px;
+    cursor: move;
+    user-select: none;
+}
+
+.favorite-list li:hover {
+    background: #e0e0e0;
+}
+
+.favorites-dropzone h4 {
+    margin: 10px 0 5px 0;
+    font-size: 14px;
+    color: #666;
+}
