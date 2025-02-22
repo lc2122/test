@@ -248,20 +248,16 @@ function getMultiviewColumns(layout) {
 
 function getPlayerUrl(m3u8Url) {
   const ua = navigator.userAgent;
-
-  if (/Chrome/i.test(ua) && !/Whale/i.test(ua) && !/Edg/i.test(ua)) {
-    // Chrome but not Whale
-    return `chrome-extension://eakdijdofmnclopcffkkgmndadhbjgka/player.html\#${encodeURIComponent(m3u8Url)}`;
-  } else if (/Whale/i.test(ua)) {
-    // Whale
-    return `whale-extension://dkkdiokeigcbopfigidddbnnnbblehml/player.html\#${encodeURIComponent(m3u8Url)}`;
-  } else if (/Edg/i.test(ua)) {
-    // Edge
-    return `extension://eakdijdofmnclopcffkkgmndadhbjgka/player.html\#${encodeURIComponent(m3u8Url)}`;
-  } else {
-    // Other browsers
+  // Whale나 Edge인 경우에는 Livereacting 플레이어를 사용합니다.
+  if (/Whale/i.test(ua) || /Edg/i.test(ua)) {
     return `https://www.livereacting.com/tools/hls-player-embed?url=${encodeURIComponent(m3u8Url)}`;
   }
+  // Chrome인 경우에만 chrome-extension URL을 사용합니다.
+  if (/Chrome/i.test(ua)) {
+    return `chrome-extension://eakdijdofmnclopcffkkgmndadhbjgka/player.html#${m3u8Url}`;
+  }
+  // 그 외의 브라우저에서는 Livereacting 플레이어를 사용합니다.
+  return `https://www.livereacting.com/tools/hls-player-embed?url=${encodeURIComponent(m3u8Url)}`;
 }
 
 /* 즐겨찾기 모달 관련 기존 함수 (독립적 동작) */
