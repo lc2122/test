@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
@@ -8,28 +9,34 @@
     <style>
         /* 버튼 크기 조정 */
         .menu-button {
-            padding: 5px 10px; /* 버튼 크기 줄임 */
-            font-size: 14px; /* 폰트 크기 줄임 */
-            margin: 2px; /* 버튼 간격 조정 */
+            padding: 5px 10px;
+            /* 버튼 크기 줄임 */
+            font-size: 14px;
+            /* 폰트 크기 줄임 */
+            margin: 2px;
+            /* 버튼 간격 조정 */
         }
 
         /* 추가 스타일: 전체 레이아웃과 스크롤 방지 */
-        html, body {
-            height: 100%; /* html, body 높이 100% 설정 */
+        html,
+        body {
+            height: 100%;
+            /* html, body 높이 100% 설정 */
             margin: 0;
             padding: 0;
-            overflow: hidden; /* body 스크롤 방지 */
+            overflow: hidden;
+            /* body 스크롤 방지 */
         }
 
         .container {
             display: flex;
-            flex-direction: column; /* 모바일에서는 세로 배치 */
-            height: 100%; /* container 높이 100% 설정 */
+            flex-direction: column;
+            /* 모바일에서는 세로 배치 */
+            height: 100%;
+            /* container 높이 100% 설정 */
             overflow: hidden;
         }
-        .app_banner_container__8\+G2L.app_banner_is_fixed__vD7c- {
-            display: none !important;
-        }
+
         /* 멀티뷰 스타일 */
         .multiview-container {
             display: grid;
@@ -51,6 +58,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <!-- 상단: 버튼 메뉴 -->
@@ -66,22 +74,12 @@
 
         <!-- 중간: 영상 표시 -->
         <div class="video-section" id="video-section">
-            <iframe
-                id="video-iframe"
-                src=""
-                frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen
-            ></iframe>
+            <iframe id="video-iframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         </div>
 
         <!-- 하단: 채팅창 -->
         <div class="chat-section">
-            <iframe
-                id="chat-iframe"
-                src=""
-                frameborder="0"
-            ></iframe>
+            <iframe id="chat-iframe" src="" frameborder="0"></iframe>
         </div>
     </div>
 
@@ -121,54 +119,43 @@
                 <button id="close-btn" class="menu-button" style="background-color: #dc3545; color: white;">닫기</button>
             </div>
             <div style="margin-top: 10px; color: #666; font-size: 12px; word-wrap: break-word;">
-             ex) 롤캐직링, 영상주소, m3u8(크롬,웨일,엣지는<a href="https://chromewebstore.google.com/detail/hls-player-m3u8-streaming/eakdijdofmnclopcffkkgmndadhbjgka?hl=ko" target="_blank">플레이어</a>설치)
+                ex) 롤캐직링, 영상주소, m3u8(크롬,웨일,엣지는<a href="https://chromewebstore.google.com/detail/hls-player-m3u8-streaming/eakdijdofmnclopcffkkgmndadhbjgka?hl=ko" target="_blank">플레이어</a>설치)
             </div>
         </div>
     </div>
 
     <!-- 기존 즐겨찾기 모달 (독립적으로 동작) -->
     <div id="favorite-modal" style="display: none;">
-      <div style="display: flex; flex-direction: column; align-items: center;">
-        <h3>즐겨찾기 목록</h3>
-        <input
-          type="text"
-          id="favorite-name-input"
-          placeholder="이름 입력"
-          class="favorite-input"
-          style="flex: 1;"
-        />
-        <div class="input-row">
-          <input
-            type="text"
-            id="favorite-url-input"
-            placeholder="주소 입력"
-            class="favorite-input"
-          />
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <h3>즐겨찾기 목록</h3>
+            <input type="text" id="favorite-name-input" placeholder="이름 입력" class="favorite-input" style="flex: 1;" />
+            <div class="input-row">
+                <input type="text" id="favorite-url-input" placeholder="주소 입력" class="favorite-input" />
+            </div>
+            <button id="add-favorite-btn" class="menu-button">추가</button>
         </div>
-        <button id="add-favorite-btn" class="menu-button">추가</button>
-      </div>
-      <ul id="favorite-list" style="list-style-type: none; padding: 0; width: 100%;">
-        <!-- 즐겨찾기 항목이 여기에 동적으로 추가됩니다 -->
-      </ul>
-      <div class="button-container">
-        <button id="close-favorite-modal" class="menu-button" style="background-color: #dc3545; color: white;">닫기</button>
-      </div>
+        <ul id="favorite-list" style="list-style-type: none; padding: 0; width: 100%;">
+            <!-- 즐겨찾기 항목이 여기에 동적으로 추가됩니다 -->
+        </ul>
+        <div class="button-container">
+            <button id="close-favorite-modal" class="menu-button" style="background-color: #dc3545; color: white;">닫기</button>
+        </div>
     </div>
 
     <script>
-        function getVideoarea(w, h, wr, hr){
+        function getVideoarea(w, h, wr, hr) {
             h = h - 25;
-            if(w <= 0 || h <= 0){
+            if (w <= 0 || h <= 0) {
                 return 0;
-            } else if(w*hr > h*wr){
+            } else if (w * hr > h * wr) {
                 return h * h * wr / hr;
             } else {
                 return w * w * hr / wr;
             }
         }
 
-        function getUtility(x, n){
-            return x/(x+n);
+        function getUtility(x, n) {
+            return x / (x + n);
         }
 
         // 디바운스 함수
@@ -181,57 +168,57 @@
                 }, delay);
             };
         }
-        
-function adjustChatSectionHeight() {
-    const menuSection = document.getElementById('menu-section');
-    const chatSection = document.querySelector('.chat-section');
 
-    if (chatSection && menuSection) {
-        chatSection.style.height = `calc(100% - ${menuSection.offsetHeight}px)`;
-    }
-}
+        function adjustChatSectionHeight() {
+            const menuSection = document.getElementById('menu-section');
+            const chatSection = document.querySelector('.chat-section');
+
+            if (chatSection && menuSection) {
+                chatSection.style.height = `calc(100% - ${menuSection.offsetHeight}px)`;
+            }
+        }
         // 레이아웃 조정 함수 (수정됨)
-function design() {
-    var win = window;
-    var doc = document;
-    var docElem = doc.documentElement;
-    var body = doc.getElementsByTagName('body')[0];
-    var w = win.innerWidth || docElem.clientWidth || body.clientWidth;
-    var h = win.innerHeight || docElem.clientHeight || body.clientHeight;
-    
-    // 최소 채팅 높이 계산 추가
-    var minChatHeight = h * 0.4; // 채팅 섹션 최소 높이 40%
-    var maxVideoHeight = h - minChatHeight - 50; // 비디오 섹션 최대 높이
-    var standardHeight = w * 9/16 + 25; // 기존 16:9 비율 계산
-    
-    // hgh 수정
-    var hgh = standardHeight > maxVideoHeight ? maxVideoHeight : standardHeight;
-    
-    var wg = getUtility(getVideoarea(w - 320, h, 16, 9), 192 * 108 * 10) + getUtility(240 * h, 24 * 20 * 10);
-    var hg = getUtility(getVideoarea(w, hgh, 16, 9), 192 * 108 * 10) + getUtility((w > 240 ? 240 : w) * (h - hgh), 24 * 20 * 10);
+        function design() {
+            var win = window;
+            var doc = document;
+            var docElem = doc.documentElement;
+            var body = doc.getElementsByTagName('body')[0];
+            var w = win.innerWidth || docElem.clientWidth || body.clientWidth;
+            var h = win.innerHeight || docElem.clientHeight || body.clientHeight;
 
-    const menuSection = document.getElementById('menu-section');
-    const videoSection = document.getElementById('video-section');
-    const chatSection = document.querySelector('.chat-section');
-    const videoIframe = document.getElementById('video-iframe');
-    const chatIframe = document.getElementById('chat-iframe');
+            // 최소 채팅 높이 계산 추가
+            var minChatHeight = h * 0.4; // 채팅 섹션 최소 높이 40%
+            var maxVideoHeight = h - minChatHeight - 50; // 비디오 섹션 최대 높이
+            var standardHeight = w * 9 / 16 + 25; // 기존 16:9 비율 계산
 
-    if (hg > wg) {
-        // 모바일: 상하 레이아웃
-        menuSection.style.position = "relative";
-        menuSection.style.width = "100%";
-        menuSection.style.height = "auto";
-        menuSection.style.display = "flex";
-        menuSection.style.justifyContent = "space-around";
-        menuSection.style.padding = "10px 0";
+            // hgh 수정
+            var hgh = standardHeight > maxVideoHeight ? maxVideoHeight : standardHeight;
 
-        videoSection.style.width = "100%";
-        videoSection.style.height = (100 + hgh) + "px";
-        videoSection.style.position = "relative";
+            var wg = getUtility(getVideoarea(w - 320, h, 16, 9), 192 * 108 * 10) + getUtility(240 * h, 24 * 20 * 10);
+            var hg = getUtility(getVideoarea(w, hgh, 16, 9), 192 * 108 * 10) + getUtility((w > 240 ? 240 : w) * (h - hgh), 24 * 20 * 10);
 
-        chatSection.style.width = "100%";
-        chatSection.style.height = (h - hgh - 100) + "px";
-        chatSection.style.position = "relative";
+            const menuSection = document.getElementById('menu-section');
+            const videoSection = document.getElementById('video-section');
+            const chatSection = document.querySelector('.chat-section');
+            const videoIframe = document.getElementById('video-iframe');
+            const chatIframe = document.getElementById('chat-iframe');
+
+            if (hg > wg) {
+                // 모바일: 상하 레이아웃
+                menuSection.style.position = "relative";
+                menuSection.style.width = "100%";
+                menuSection.style.height = "auto";
+                menuSection.style.display = "flex";
+                menuSection.style.justifyContent = "space-around";
+                menuSection.style.padding = "10px 0";
+
+                videoSection.style.width = "100%";
+                videoSection.style.height = (100 + hgh) + "px";
+                videoSection.style.position = "relative";
+
+                chatSection.style.width = "100%";
+                chatSection.style.height = (h - hgh - 100) + "px";
+                chatSection.style.position = "relative";
 
             } else {
                 // PC: 좌우 레이아웃 (수정)
@@ -274,30 +261,30 @@ function design() {
                 videoSection.style.position = "relative";
                 videoSection.style.float = "left";
             }
-        // 리사이즈 이벤트 리스너 추가
-    window.addEventListener('resize', adjustChatSectionHeight);
-    adjustChatSectionHeight(); // 초기 설정 시 한 번 실행
+            // 리사이즈 이벤트 리스너 추가
+            window.addEventListener('resize', adjustChatSectionHeight);
+            adjustChatSectionHeight(); // 초기 설정 시 한 번 실행
         }
 
         // 초기 로드 시 실행
         window.onload = function() {
             const chatIframe = document.getElementById('chat-iframe');
             const lgicurl = 'https://insagirl-toto.appspot.com/chatting/lgic/';
-            if(location.hash && location.hash.substring(1)) {
+            if (location.hash && location.hash.substring(1)) {
                 chatIframe.src = lgicurl + '#' + decodeURIComponent(location.hash.substring(1));
             } else {
                 chatIframe.src = lgicurl;
             }
             design(); // 초기 레이아웃 설정
         };
-        
+
         // "흐름" 버튼 클릭 이벤트 추가
         const hrmBtn = document.getElementById('hrm-btn');
         hrmBtn.addEventListener('click', () => {
             const url = 'https://insagirl-toto.appspot.com/hrm/?where=1';
             window.open(url, '_blank');
         });
-        
+
         // F5 버튼 클릭 시 채팅창 새로고침 (해시 유지)
         const refreshBtn = document.getElementById('refresh-btn');
         refreshBtn.addEventListener('click', () => {
@@ -311,4 +298,5 @@ function design() {
     </script>
     <script src="script.js"></script>
 </body>
+
 </html>
