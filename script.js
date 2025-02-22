@@ -247,18 +247,21 @@ function getMultiviewColumns(layout) {
 }
 
 function getPlayerUrl(m3u8Url) {
-    const ua = navigator.userAgent;
-    const encodedUrl = encodeURIComponent(m3u8Url);
+  const ua = navigator.userAgent;
 
-    if (/Whale/i.test(ua)) {
-        return `whale-extension://dkkdiokeigcbopfigidddbnnnbblehml/player.html#${encodedUrl}`;
-    } else if (/Edg/i.test(ua)) {
-        return `extension://eakdijdofmnclopcffkkgmndadhbjgka/player.html#${encodedUrl}`;
-    } else if (/Chrome/i.test(ua) && !/Whale/i.test(ua) && !/Edg/i.test(ua)) {
-        return `chrome-extension://eakdijdofmnclopcffkkgmndadhbjgka/player.html#${m3u8Url}`;
-    } else {
-        return `https://www.livereacting.com/tools/hls-player-embed?url=${encodedUrl}`;
-    }
+  if (/Chrome/i.test(ua) && !/Whale/i.test(ua) && !/Edg/i.test(ua)) {
+    // Chrome but not Whale
+    return `chrome-extension://eakdijdofmnclopcffkkgmndadhbjgka/player.html\#${encodeURIComponent(m3u8Url)}`;
+  } else if (/Whale/i.test(ua)) {
+    // Whale
+    return `whale-extension://dkkdiokeigcbopfigidddbnnnbblehml/player.html\#${encodeURIComponent(m3u8Url)}`;
+  } else if (/Edg/i.test(ua)) {
+    // Edge
+    return `extension://eakdijdofmnclopcffkkgmndadhbjgka/player.html\#${encodeURIComponent(m3u8Url)}`;
+  } else {
+    // Other browsers
+    return `https://www.livereacting.com/tools/hls-player-embed?url=${encodeURIComponent(m3u8Url)}`;
+  }
 }
 
 /* 즐겨찾기 모달 관련 기존 함수 (독립적 동작) */
