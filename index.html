@@ -183,39 +183,47 @@
         }
 
         // 레이아웃 조정 함수 (수정됨)
-        function design() {
-            var win = window;
-            var doc = document;
-            var docElem = doc.documentElement;
-            var body = doc.getElementsByTagName('body')[0];
-            var w = win.innerWidth || docElem.clientWidth || body.clientWidth;
-            var h = win.innerHeight || docElem.clientHeight || body.clientHeight;
-            var wg = getUtility(getVideoarea(w - 420, h, 16, 9), 192 * 108 * 10) + getUtility(240 * h, 24 * 20 * 10);
-            var hgh = h - 200 > w * 9 / 16 + 25 ? w * 9 / 16 + 25 : h - 200;
-            var hg = getUtility(getVideoarea(w, hgh, 16, 9), 192 * 108 * 10) + getUtility((w > 240 ? 240 : w) * (h - hgh), 24 * 20 * 10);
+function design() {
+    var win = window;
+    var doc = document;
+    var docElem = doc.documentElement;
+    var body = doc.getElementsByTagName('body')[0];
+    var w = win.innerWidth || docElem.clientWidth || body.clientWidth;
+    var h = win.innerHeight || docElem.clientHeight || body.clientHeight;
+    
+    // 최소 채팅 높이 계산 추가
+    var minChatHeight = h * 0.4; // 채팅 섹션 최소 높이 40%
+    var maxVideoHeight = h - minChatHeight - 50; // 비디오 섹션 최대 높이
+    var standardHeight = w * 9/16 + 25; // 기존 16:9 비율 계산
+    
+    // hgh 수정
+    var hgh = standardHeight > maxVideoHeight ? maxVideoHeight : standardHeight;
+    
+    var wg = getUtility(getVideoarea(w - 420, h, 16, 9), 192 * 108 * 10) + getUtility(240 * h, 24 * 20 * 10);
+    var hg = getUtility(getVideoarea(w, hgh, 16, 9), 192 * 108 * 10) + getUtility((w > 240 ? 240 : w) * (h - hgh), 24 * 20 * 10);
 
-            const menuSection = document.getElementById('menu-section');
-            const videoSection = document.getElementById('video-section');
-            const chatSection = document.querySelector('.chat-section');
-            const videoIframe = document.getElementById('video-iframe');
-            const chatIframe = document.getElementById('chat-iframe');
+    const menuSection = document.getElementById('menu-section');
+    const videoSection = document.getElementById('video-section');
+    const chatSection = document.querySelector('.chat-section');
+    const videoIframe = document.getElementById('video-iframe');
+    const chatIframe = document.getElementById('chat-iframe');
 
-            if (hg > wg) {
-                // 모바일: 상하 레이아웃 (기존 코드 유지)
-                menuSection.style.position = "relative";
-                menuSection.style.width = "100%";
-                menuSection.style.height = "auto";
-                menuSection.style.display = "flex";
-                menuSection.style.justifyContent = "space-around";
-                menuSection.style.padding = "10px 0";
+    if (hg > wg) {
+        // 모바일: 상하 레이아웃
+        menuSection.style.position = "relative";
+        menuSection.style.width = "100%";
+        menuSection.style.height = "auto";
+        menuSection.style.display = "flex";
+        menuSection.style.justifyContent = "space-around";
+        menuSection.style.padding = "10px 0";
 
-                videoSection.style.width = "100%";
-                videoSection.style.height = (50 + hgh) + "px";
-                videoSection.style.position = "relative";
+        videoSection.style.width = "100%";
+        videoSection.style.height = (50 + hgh) + "px";
+        videoSection.style.position = "relative";
 
-                chatSection.style.width = "100%";
-                chatSection.style.height = (h - hgh - 50) + "px";
-                chatSection.style.position = "relative";
+        chatSection.style.width = "100%";
+        chatSection.style.height = (h - hgh - 50) + "px";
+        chatSection.style.position = "relative";
 
             } else {
                 // PC: 좌우 레이아웃 (수정)
