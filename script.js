@@ -249,7 +249,7 @@ function getMultiviewColumns(layout) {
 function getPlayerUrl(m3u8Url) {
   // Whale Browser: 전역 객체 `whale`가 존재하면 Whale임
   if (typeof window.whale !== "undefined") {
-    return `https://www.livereacting.com/tools/hls-player-embed?url=${encodeURIComponent(m3u8Url)}`;
+    return `whale-extension://dkkdiokeigcbopfigidddbnnnbblehml/player.html#${m3u8Url}`;
   }
   
   // Edge: 여전히 User Agent 문자열을 활용해야 하는 경우
