@@ -248,10 +248,16 @@ function getMultiviewColumns(layout) {
 
 function getPlayerUrl(m3u8Url) {
     const ua = navigator.userAgent;
-    if (/Chrome/i.test(ua) && !/Whale/i.test(ua) && !/Edg/i.test(ua)) {
+    const encodedUrl = encodeURIComponent(m3u8Url);
+
+    if (/Whale/i.test(ua)) {
+        return `whale-extension://dkkdiokeigcbopfigidddbnnnbblehml/player.html#${encodedUrl}`;
+    } else if (/Edg/i.test(ua)) {
+        return `extension://eakdijdofmnclopcffkkgmndadhbjgka/player.html#${encodedUrl}`;
+    } else if (/Chrome/i.test(ua) && !/Whale/i.test(ua) && !/Edg/i.test(ua)) {
         return `chrome-extension://eakdijdofmnclopcffkkgmndadhbjgka/player.html#${m3u8Url}`;
     } else {
-        return `https://www.livereacting.com/tools/hls-player-embed?url=${encodeURIComponent(m3u8Url)}`;
+        return `https://www.livereacting.com/tools/hls-player-embed?url=${encodedUrl}`;
     }
 }
 
