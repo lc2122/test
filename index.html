@@ -156,17 +156,6 @@
     </div>
 
     <script>
-        // SameSite=None 쿠키 설정 함수
-        function setSameSiteNoneCookie(name, value, days) {
-            let expires = "";
-            if (days) {
-                const date = new Date();
-                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-                expires = "; expires=" + date.toUTCString();
-            }
-            document.cookie = `${name}=${value}${expires}; path=/; SameSite=None`;
-        }
-
         function getVideoarea(w, h, wr, hr){
             h = h - 25;
             if(w <= 0 || h <= 0){
@@ -236,7 +225,7 @@
                 pcContainer.style.width = '100%';
 
                 const rightContainer = document.createElement('div');
-                rightContainer.style.width = '420px';
+                rightContainer.style.width = '20%';
                 rightContainer.style.height = '100%';
                 rightContainer.style.float = 'right';
 
@@ -263,8 +252,8 @@
                 container.innerHTML = '';
                 container.appendChild(pcContainer);
 
-                videoSection.style.width = (w - 420) + "px";
-                videoSection.style.height = (container.offsetHeight - rightContainer.offsetHeight) + "px";
+                videoSection.style.width = "80%";
+                videoSection.style.height = "100%";
                 videoSection.style.position = "relative";
                 videoSection.style.float = "left";
             }
