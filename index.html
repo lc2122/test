@@ -182,82 +182,78 @@
             return x/(x+n);
         }
 
-        // 레이아웃 조정 함수 (수정됨)
-        function design() {
-            var win = window;
-            var doc = document;
-            var docElem = doc.documentElement;
-            var body = doc.getElementsByTagName('body')[0];
-            var w = win.innerWidth || docElem.clientWidth || body.clientWidth;
-            var h = win.innerHeight || docElem.clientHeight || body.clientHeight;
-            var wg = getUtility(getVideoarea(w - 420, h, 16, 9), 192 * 108 * 10) + getUtility(240 * h, 24 * 20 * 10);
-            var hgh = h - 200 > w * 9 / 16 + 25 ? w * 9 / 16 + 25 : h - 200;
-            var hg = getUtility(getVideoarea(w, hgh, 16, 9), 192 * 108 * 10) + getUtility((w > 240 ? 240 : w) * (h - hgh), 24 * 20 * 10);
+function design() {
+    var win = window;
+    var doc = document;
+    var docElem = doc.documentElement;
+    var body = doc.getElementsByTagName('body')[0];
+    var w = win.innerWidth || docElem.clientWidth || body.clientWidth;
+    var h = win.innerHeight || docElem.clientHeight || body.clientHeight;
+    var wg = getUtility(getVideoarea(w - 420, h, 16, 9), 192 * 108 * 10) + getUtility(240 * h, 24 * 20 * 10);
+    var hgh = h - 200 > w * 9 / 16 + 25 ? w * 9 / 16 + 25 : h - 200;
+    var hg = getUtility(getVideoarea(w, hgh, 16, 9), 192 * 108 * 10) + getUtility((w > 240 ? 240 : w) * (h - hgh), 24 * 20 * 10);
 
-            const menuSection = document.getElementById('menu-section');
-            const videoSection = document.getElementById('video-section');
-            const chatSection = document.querySelector('.chat-section');
-            const videoIframe = document.getElementById('video-iframe');
-            const chatIframe = document.getElementById('chat-iframe');
+    const menuSection = document.getElementById('menu-section');
+    const videoSection = document.getElementById('video-section');
+    const chatSection = document.querySelector('.chat-section');
 
-            if (hg > wg) {
-                // 모바일: 상하 레이아웃 (기존 코드 유지)
-                menuSection.style.position = "relative";
-                menuSection.style.width = "100%";
-                menuSection.style.height = "auto";
-                menuSection.style.display = "flex";
-                menuSection.style.justifyContent = "space-around";
-                menuSection.style.padding = "10px 0";
+    if (hg > wg) {
+        // 모바일: 상하 레이아웃
+        menuSection.style.position = "relative";
+        menuSection.style.width = "100%";
+        menuSection.style.height = "auto";
+        menuSection.style.display = "flex";
+        menuSection.style.justifyContent = "space-around";
+        menuSection.style.padding = "10px 0";
 
-                videoSection.style.width = "100%";
-                videoSection.style.height = (100 + hgh) + "px";
-                videoSection.style.position = "relative";
+        videoSection.style.width = "100%";
+        videoSection.style.height = (100 + hgh) + "px";
+        videoSection.style.position = "relative";
 
-                chatSection.style.width = "100%";
-                chatSection.style.height = (h - hgh - 100) + "px";
-                chatSection.style.position = "relative";
+        chatSection.style.width = "100%";
+        chatSection.style.height = (h - hgh - 100) + "px";
+        chatSection.style.position = "relative";
+    } else {
+        // PC: 좌우 레이아웃
+        const pcContainer = document.createElement('div');
+        pcContainer.style.display = 'flex';
+        pcContainer.style.height = '100%';
+        pcContainer.style.width = '100%';
 
-            } else {
-                // PC: 좌우 레이아웃 (수정)
-                const pcContainer = document.createElement('div');
-                pcContainer.style.display = 'flex';
-                pcContainer.style.height = '100%';
-                pcContainer.style.width = '100%';
+        const rightContainer = document.createElement('div');
+        rightContainer.style.width = '420px';
+        rightContainer.style.height = '100%';
+        rightContainer.style.float = 'right';
 
-                const rightContainer = document.createElement('div');
-                rightContainer.style.width = '420px';
-                rightContainer.style.height = '100%';
-                rightContainer.style.float = 'right';
+        menuSection.style.position = "relative";
+        menuSection.style.width = "100%";
+        menuSection.style.height = "auto";
+        menuSection.style.display = "flex";
+        menuSection.style.flexDirection = "row";
+        menuSection.style.justifyContent = "space-around";
+        menuSection.style.padding = "10px";
 
-                menuSection.style.position = "relative";
-                menuSection.style.width = "100%";
-                menuSection.style.height = "auto";
-                menuSection.style.display = "flex";
-                menuSection.style.flexDirection = "row";
-                menuSection.style.justifyContent = "space-around";
-                menuSection.style.padding = "10px";
+        chatSection.style.width = "100%";
+        chatSection.style.height = "calc(100% - " + menuSection.offsetHeight + "px)";
+        chatSection.style.position = "relative";
+        chatSection.style.top = "0";
 
-                chatSection.style.width = "100%";
-                chatSection.style.height = "calc(100% - " + menuSection.offsetHeight + "px)";
-                chatSection.style.position = "relative";
-                chatSection.style.top = "0";
+        rightContainer.appendChild(menuSection);
+        rightContainer.appendChild(chatSection);
 
-                rightContainer.appendChild(menuSection);
-                rightContainer.appendChild(chatSection);
+        pcContainer.appendChild(videoSection);
+        pcContainer.appendChild(rightContainer);
 
-                pcContainer.appendChild(videoSection);
-                pcContainer.appendChild(rightContainer);
+        const container = document.querySelector('.container');
+        container.innerHTML = '';
+        container.appendChild(pcContainer);
 
-                const container = document.querySelector('.container');
-                container.innerHTML = '';
-                container.appendChild(pcContainer);
-
-                videoSection.style.width = (w - 420) + "px";
-                videoSection.style.height = "100%";
-                videoSection.style.position = "relative";
-                videoSection.style.float = "left";
-            }
-        }
+        videoSection.style.width = (w - 420) + "px";
+        videoSection.style.height = "100%";
+        videoSection.style.position = "relative";
+        videoSection.style.float = "left";
+    }
+}
 
         // 초기 로드 시 실행
         window.onload = function() {
