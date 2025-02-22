@@ -202,6 +202,7 @@ function setSingleViewContent(url) {
 }
 
 function startMultiview() {
+    // 멀티뷰 입력 필드의 값 읽어오기
     const inputs = multiviewUrlInputs.querySelectorAll('.multiview-input');
     const urls = Array.from(inputs).map(input => {
         const transformed = transformUrl(input.value.trim());
@@ -210,6 +211,7 @@ function startMultiview() {
             : transformed;
     });
 
+    // 1분할 예외 처리 (실제로 단일뷰로 전환)
     if (currentMultiviewLayout === 1) {
         multiviewCheckbox.checked = false;
         showSingleInput();
@@ -217,6 +219,7 @@ function startMultiview() {
         return;
     }
 
+    // 멀티뷰 컨테이너 생성
     videoSection.innerHTML = `
         <div class="multiview-container" 
              style="grid-template-columns: repeat(${getMultiviewColumns(currentMultiviewLayout)}, 1fr);">
@@ -227,6 +230,15 @@ function startMultiview() {
             `).join('')}
         </div>
     `;
+
+    // 멀티뷰 모드에서 iframe 크기 조정
+    const multiviewItems = videoSection.querySelectorAll('.multiview-item');
+    multiviewItems.forEach(item => {
+        const iframe = item.querySelector('iframe');
+        if (iframe) {
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+        }
     });
 }
 
@@ -236,11 +248,19 @@ function getMultiviewColumns(layout) {
 
 function getPlayerUrl(m3u8Url) {
   const ua = navigator.userAgent;
-  // Chrome, Whale, Edge에서는 chrome-extension URL 사용
-  if (/Chrome/i.test(ua) || /Whale/i.test(ua) || /Edg/i.test(ua)) {
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+  const isChrome = /Chrome/i.test(ua);
+  const isWhale = /Whale/i.test(ua);
+  const isEdge = /Edg/i.test(ua);
+  // 모바일 브라우저인 경우 Livereacting 플레이어 사용
+  if (isMobile) {
+    return `https://www.livereacting.com/tools/hls-player-embed?url=${encodeURIComponent(m3u8Url)}`;
+  }
+  // 데스크탑 환경에서 Chrome, Whale, Edge인 경우 chrome-extension URL 사용
+  if (isChrome || isWhale || isEdge) {
     return `chrome-extension://eakdijdofmnclopcffkkgmndadhbjgka/player.html#${m3u8Url}`;
   }
-  // 그 외의 브라우저에서는 Livereacting 플레이어를 사용
+  // 그 외의 브라우저에서는 Livereacting 플레이어 사용 (데스크탑)
   return `https://www.livereacting.com/tools/hls-player-embed?url=${encodeURIComponent(m3u8Url)}`;
 }
 
