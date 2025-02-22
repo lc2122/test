@@ -199,7 +199,7 @@ function design() {
     // hgh 수정
     var hgh = standardHeight > maxVideoHeight ? maxVideoHeight : standardHeight;
     
-    var wg = getUtility(getVideoarea(w - 420, h, 16, 9), 192 * 108 * 10) + getUtility(240 * h, 24 * 20 * 10);
+    var wg = getUtility(getVideoarea(w - 320, h, 16, 9), 192 * 108 * 10) + getUtility(240 * h, 24 * 20 * 10);
     var hg = getUtility(getVideoarea(w, hgh, 16, 9), 192 * 108 * 10) + getUtility((w > 240 ? 240 : w) * (h - hgh), 24 * 20 * 10);
 
     const menuSection = document.getElementById('menu-section');
