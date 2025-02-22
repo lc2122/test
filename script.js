@@ -246,41 +246,23 @@ function getMultiviewColumns(layout) {
     return layout > 2 ? 2 : layout;
 }
 
-async function getPlayerUrl(m3u8Url) {
-  // userAgentData 사용 가능하면 이를 활용
-  if (navigator.userAgentData) {
-    try {
-      const { brands } = await navigator.userAgentData.getHighEntropyValues(["brands"]);
-      // brands 배열에서 Whale, Edge, Chrome 등의 정보를 확인할 수 있음
-      const brandNames = brands.map(b => b.brand.toLowerCase());
-      
-      if (brandNames.some(name => name.includes("whale"))) {
-        return `https://www.livereacting.com/tools/hls-player-embed?url=${encodeURIComponent(m3u8Url)}`;
-      }
-      if (brandNames.some(name => name.includes("edge"))) {
-        return `https://www.livereacting.com/tools/hls-player-embed?url=${encodeURIComponent(m3u8Url)}`;
-      }
-      if (brandNames.some(name => name.includes("chrome"))) {
-        return `chrome-extension://eakdijdofmnclopcffkkgmndadhbjgka/player.html#${m3u8Url}`;
-      }
-    } catch (error) {
-      console.error("userAgentData error:", error);
-    }
-  }
-  
-  // fallback은 기존 방식 (whale 객체 존재 여부, User Agent 문자열 등)
+function getPlayerUrl(m3u8Url) {
+  // Whale Browser: 전역 객체 `whale`가 존재하면 Whale임
   if (typeof window.whale !== "undefined") {
     return `https://www.livereacting.com/tools/hls-player-embed?url=${encodeURIComponent(m3u8Url)}`;
   }
   
+  // Edge: 여전히 User Agent 문자열을 활용해야 하는 경우
   if (/Edg/i.test(navigator.userAgent)) {
     return `https://www.livereacting.com/tools/hls-player-embed?url=${encodeURIComponent(m3u8Url)}`;
   }
   
+  // Chrome: Whale과 Edge가 아니면서 구글 크롬인 경우.
   if (/Chrome/i.test(navigator.userAgent)) {
     return `chrome-extension://eakdijdofmnclopcffkkgmndadhbjgka/player.html#${m3u8Url}`;
   }
   
+  // 그 외의 브라우저의 기본값
   return `https://www.livereacting.com/tools/hls-player-embed?url=${encodeURIComponent(m3u8Url)}`;
 }
 
