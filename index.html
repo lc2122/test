@@ -181,7 +181,15 @@
                 }, delay);
             };
         }
+        
+function adjustChatSectionHeight() {
+    const menuSection = document.getElementById('menu-section');
+    const chatSection = document.querySelector('.chat-section');
 
+    if (chatSection && menuSection) {
+        chatSection.style.height = `calc(100% - ${menuSection.offsetHeight}px)`;
+    }
+}
         // 레이아웃 조정 함수 (수정됨)
 function design() {
     var win = window;
@@ -266,6 +274,9 @@ function design() {
                 videoSection.style.position = "relative";
                 videoSection.style.float = "left";
             }
+        // 리사이즈 이벤트 리스너 추가
+    window.addEventListener('resize', adjustChatSectionHeight);
+    adjustChatSectionHeight(); // 초기 설정 시 한 번 실행
         }
 
         // 초기 로드 시 실행
