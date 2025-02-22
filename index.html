@@ -270,7 +270,14 @@
             }
             design(); // 초기 레이아웃 설정
         };
-
+        
+        // "흐름" 버튼 클릭 이벤트 추가
+        const hrmBtn = document.getElementById('hrm-btn');
+        hrmBtn.addEventListener('click', () => {
+            const url = 'https://insagirl-toto.appspot.com/hrm/?where=1';
+            window.open(url, '_blank');
+        });
+        
         // F5 버튼 클릭 시 채팅창 새로고침 (해시 유지)
         const refreshBtn = document.getElementById('refresh-btn');
         refreshBtn.addEventListener('click', () => {
