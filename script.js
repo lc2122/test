@@ -247,22 +247,12 @@ function getMultiviewColumns(layout) {
 }
 
 function getPlayerUrl(m3u8Url) {
-  // Whale Browser: 전역 객체 `whale`가 존재하면 Whale임
-  if (typeof window.whale !== "undefined") {
+  const ua = navigator.userAgent;
+  // Chrome, Whale, Edge에서는 chrome-extension URL 사용
+  if (/Chrome/i.test(ua) || /Whale/i.test(ua) || /Edg/i.test(ua)) {
     return `chrome-extension://eakdijdofmnclopcffkkgmndadhbjgka/player.html#${m3u8Url}`;
   }
-  
-  // Edge: 여전히 User Agent 문자열을 활용해야 하는 경우
-  if (/Edg/i.test(navigator.userAgent)) {
-    return `https://www.livereacting.com/tools/hls-player-embed?url=${encodeURIComponent(m3u8Url)}`;
-  }
-  
-  // Chrome: Whale과 Edge가 아니면서 구글 크롬인 경우.
-  if (/Chrome/i.test(navigator.userAgent)) {
-    return `chrome-extension://eakdijdofmnclopcffkkgmndadhbjgka/player.html#${m3u8Url}`;
-  }
-  
-  // 그 외의 브라우저의 기본값
+  // 그 외의 브라우저에서는 Livereacting 플레이어를 사용
   return `https://www.livereacting.com/tools/hls-player-embed?url=${encodeURIComponent(m3u8Url)}`;
 }
 
