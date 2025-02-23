@@ -193,7 +193,9 @@ function startSingleView() {
 function setSingleViewContent(url) {
     const transformedUrl = transformUrl(url);
     if (transformedUrl) {
-        if (transformedUrl.endsWith('.m3u8')) {
+        // URL에서 쿼리스트링 제거 후 m3u8 여부 확인
+        const urlWithoutQuery = transformedUrl.split('?')[0];
+        if (urlWithoutQuery.endsWith('.m3u8')) {
             videoIframe.src = getPlayerUrl(transformedUrl);
         } else {
             videoIframe.src = transformedUrl;
@@ -205,9 +207,12 @@ function startMultiview() {
     // 멀티뷰 입력 필드의 값 읽어오기
     const inputs = multiviewUrlInputs.querySelectorAll('.multiview-input');
     const urls = Array.from(inputs).map(input => {
-        const transformed = transformUrl(input.value.trim());
-        return transformed && transformed.endsWith('.m3u8') 
-            ? getPlayerUrl(transformed) 
+        const trimmed = input.value.trim();
+        const transformed = transformUrl(trimmed);
+        if (!transformed) return '';
+        const urlWithoutQuery = transformed.split('?')[0];
+        return urlWithoutQuery.endsWith('.m3u8')
+            ? getPlayerUrl(transformed)
             : transformed;
     });
 
