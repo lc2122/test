@@ -359,7 +359,7 @@ function transformUrl(url) {
         }
     }
     if (!url.startsWith('http')) { alert('유효한 URL을 입력해주세요.'); return null; }
-    if (url.endsWith('.m3u8')) return url;
+    if (url.includes('.m3u8')) return url; // m3u8 파일 포함 여부 확인
     if (url.startsWith('https://lolcast.kr/#/player/youtube/')) return `https://www.youtube.com/embed/${url.split('/').pop()}`;
     if (url.startsWith('https://lolcast.kr/#/player/twitch/')) return `https://player.twitch.tv/?channel=${url.split('/').pop()}&parent=lc2122.github.io`;
     if (url.startsWith('https://lolcast.kr/#/player/chzzk/')) return `https://chzzk.naver.com/live/${url.split('/').pop()}`;
@@ -387,8 +387,8 @@ window.addEventListener('load', () => {
     else if (hash.startsWith('#/soop/')) setSingleViewContent(`https://play.sooplive.co.kr/${hash.split('/')[2]}/embed`);
     else if (hash.startsWith('#/kick/')) setSingleViewContent(`https://player.kick.com/${hash.split('/')[2]}`);
     else if (hash.startsWith('#/hls/')) {
-        const m3u8Url = hash.split('#/hls/')[1];
-        if (m3u8Url.endsWith('.m3u8')) {
+        const m3u8Url = decodeURIComponent(hash.split('#/hls/')[1]); // URL 디코딩
+        if (m3u8Url.includes('.m3u8')) { // m3u8 포함 여부 확인
             setSingleViewContent(getPlayerUrl(m3u8Url));
         }
     }
