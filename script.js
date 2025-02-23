@@ -343,6 +343,13 @@ addFavoriteBtn.addEventListener('click', () => {
 /* URL 변환 함수 */
 function transformUrl(url) {
     if (!url) return null;
+    
+    // m3u8 URL 처리
+    if (url.includes('.m3u8')) {
+        return url; // m3u8 URL은 그대로 반환
+    }
+
+    // 기존 로직 (단축 URL 및 기타 URL 처리)
     const isShortForm = /^(youtube|twitch|chzzk|kick|afreeca)\/[^\/]+$/.test(url);
     if (url === 'https://play.sooplive.co.kr/aflol/281494910/embed') {
         return url;
@@ -359,7 +366,6 @@ function transformUrl(url) {
         }
     }
     if (!url.startsWith('http')) { alert('유효한 URL을 입력해주세요.'); return null; }
-    if (url.includes('.m3u8')) return url; // m3u8 파일 포함 여부 확인
     if (url.startsWith('https://lolcast.kr/#/player/youtube/')) return `https://www.youtube.com/embed/${url.split('/').pop()}`;
     if (url.startsWith('https://lolcast.kr/#/player/twitch/')) return `https://player.twitch.tv/?channel=${url.split('/').pop()}&parent=lc2122.github.io`;
     if (url.startsWith('https://lolcast.kr/#/player/chzzk/')) return `https://chzzk.naver.com/live/${url.split('/').pop()}`;
