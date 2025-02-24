@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>도ostream 예시</title>
+  <style>
+    /* 간단한 스타일 예시 */
+    #stream-list {
+      list-style: none;
+      padding: 0;
+    }
+    #stream-list li {
+      margin: 8px 0;
+      border: 1px solid #ddd;
+      padding: 10px;
+    }
+    .title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .info {
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>도ostream 목록 예시</h1>
+  <ul id="stream-list"></ul>
+
+  <script>
+    // 1) 가져올 데이터의 서버 주소
+    const STREAM_LIST_URL = "https://www.dostream.com/dev/stream_list.php";
+    // 2) <ul> 요소를 가져옴
+    const streamListElement = document.getElementById("stream-list");
+
+    // 3) fetch를 통해 JSON 데이터 가져오기
+    fetch(STREAM_LIST_URL)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
+      .then(data => {
+        // data는 배열 형태라고 가정: [{title, url, image, from, streamer, viewers, ...}, ...]
+        console.log("받은 데이터:", data);
+
+        // 4) 받은 data 배열을 순회하며 <li> 요소 생성
+        data.forEach(item => {
+          // <li> 생성
+          const li = document.createElement("li");
+
+          // 방송 제목
+          const titleDiv = document.createElement("div");
+          titleDiv.className = "title";
+          titleDiv.textContent = item.title || "(제목 없음)";
+
+          // 방송 정보
+          const infoDiv = document.createElement("div");
+          infoDiv.className = "info";
+          // 예: "플랫폼: twitch / 시청자수: 1234" 형태로 표시
+          infoDiv.textContent = `플랫폼: ${item.from}, 시청자수: ${item.viewers}`;
+
+          // 썸네일(옵션)
+          if (item.image) {
+            const thumbImg = document.createElement("img");
+            thumbImg.src = item.image;
+            thumbImg.alt = "썸네일";
+            thumbImg.style.width = "120px";
+            thumbImg.style.height = "auto"; 
+            // li 안에 넣기
+            li.appendChild(thumbImg);
+          }
+
+          // li 내부 구조 결합
+          li.appendChild(titleDiv);
+          li.appendChild(infoDiv);
+
+          // (옵션) 클릭 시 이동할 링크
+          // 도ostream 방식: "/#/stream" + item.url
+          // 예: /#/stream/twitch/faker
+          if (item.url) {
+            li.addEventListener("click", () => {
+              location.href = "/#/stream" + item.url;
+            });
+            li.style.cursor = "pointer";
+          }
+
+          // 5) 완성된 <li>를 <ul>에 추가
+          streamListElement.appendChild(li);
+        });
+      })
+      .catch(err => {
+        console.error("데이터 가져오는 중 오류 발생:", err);
+        streamListElement.innerHTML = "<li>방송 목록을 불러오는 데 실패했습니다.</li>";
+      });
+  </script>
+</body>
+</html>
