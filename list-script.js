@@ -9,7 +9,7 @@ function escapeHtml(text) {
     };
     return text.replace(/[&<>"']/g, function(m) { return map[m]; });
 }
-
+ 
 // 스트림 데이터 가져오기
 async function fetchStreamData() {
     try {
