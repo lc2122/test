@@ -393,9 +393,9 @@ window.addEventListener('load', () => {
     else if (hash.startsWith('#/soop/')) setSingleViewContent(`https://play.sooplive.co.kr/${hash.split('/')[2]}/embed`);
     else if (hash.startsWith('#/kick/')) setSingleViewContent(`https://player.kick.com/${hash.split('/')[2]}`);
     else if (hash.startsWith('#/hls/')) {
-        const m3u8Url = decodeURIComponent(hash.split('#/hls/')[1]); // URL 디코딩
-        if (m3u8Url.includes('.m3u8')) { // m3u8 포함 여부 확인
-            setSingleViewContent(getPlayerUrl(m3u8Url));
-        }
+    const m3u8Url = decodeURIComponent(hash.split('#/hls/')[1]);
+    if (m3u8Url.includes('.m3u8')) {
+        setSingleViewContent(m3u8Url); // getPlayerUrl()를 미리 호출하지 않음
     }
+}
 });
