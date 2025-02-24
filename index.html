@@ -290,9 +290,9 @@
         refreshBtn.addEventListener('click', () => {
             const chatIframe = document.getElementById('chat-iframe');
             if (chatIframe) {
-                const lgicurl = 'https://insagirl-toto.appspot.com/chatting/lgic/';
-                const hash = window.location.hash;
-                chatIframe.src = lgicurl + hash + '?cache=' + Math.random();
+                const baseUrl = 'https://insagirl-toto.appspot.com/chatting/lgic/';
+                const hashPart = window.location.hash ? '#' + decodeURIComponent(window.location.hash.substring(1)) : '';
+                chatIframe.src = baseUrl + '?cache=' + Math.random() + hashPart;
             }
         });
     </script>
