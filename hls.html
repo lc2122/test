@@ -13,7 +13,8 @@
       padding: 5px;
       word-break: normal;
       text-align: center;
-    } 
+      display: none; /* 기본적으로 모든 채널 숨김 */
+    }
     .wrapper {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -41,24 +42,17 @@
         var hls = new Hls();
         hls.loadSource(url);
         hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_LOADED, function(event, data) {
-          const currentStream = data.streams[0];
-          const currentChannel = currentStream.name;
-          console.log('현재 영상이 나오는 채널:', currentChannel);
-          // 현재 영상이 나오는 채널만 화면에 뜨게 하기
-          if (currentChannel === '채널 이름') {
-            video.style.display = 'block';
-          } else {
-            video.style.display = 'none';
-          }
-        });
         hls.on(Hls.Events.MANIFEST_PARSED, function() {
-          // 비디오 재생
+          video.play();
+          // 비디오가 재생 중이면 해당 채널 표시
+          video.parentElement.style.display = 'block';
         });
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = url;
         video.addEventListener('canplay', function() {
-          // 비디오 재생
+          video.play();
+          // 비디오가 재생 중이면 해당 채널 표시
+          video.parentElement.style.display = 'block';
         });
       }
     }
