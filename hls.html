@@ -37,14 +37,14 @@
   <script src="https://fastly.jsdelivr.net/npm/hls.js@latest"></script>
   <script>
     function callVideo1(video, url) {
-      if (Hls.isSupported()) {
-        var hls = new Hls();
-        hls.loadSource(url);
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, function() {
+      // 브라우저 자체 플레이어를 사용하도록 수정
+      if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+        video.addEventListener('canplay', function() {
           video.play();
         });
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      } else {
+        // HLS.js를 사용하는 대신 브라우저 기본 플레이어 사용
         video.src = url;
         video.addEventListener('canplay', function() {
           video.play();
@@ -53,8 +53,11 @@
     }
 
     function pot1(url) {
-      window.open(url, '_self'); // '_blank'를 '_self'로 변경
+      // HLS 버튼 클릭 시 chrome-extension URL로 변환
+      const extensionUrl = `chrome-extension://eakdijdofmnclopcffkkgmndadhbjgka/player.html#${url}`;
+      window.open(extensionUrl, '_self');
     }
+
     function pot2(url) {
       window.open('potplayer://' + url, '_blank'); 
     }
