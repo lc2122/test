@@ -59,10 +59,19 @@
       window.open('potplayer://' + url, '_blank'); 
     }
 
-    function captureFrame(video, canvas) {
-      if (video.paused || video.ended || video.readyState === 0) return;
-      var ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    function checkVideoState(video, videoNumber) {
+      video.addEventListener('loadedmetadata', function() {
+        console.log(`Video ${videoNumber} metadata loaded`);
+      });
+      video.addEventListener('canplay', function() {
+        console.log(`Video ${videoNumber} can play`);
+      });
+      video.addEventListener('playing', function() {
+        console.log(`Video ${videoNumber} is playing`);
+      });
+      video.addEventListener('error', function(event) {
+        console.error(`Video ${videoNumber} error:`, event.target.error);
+      });
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -76,33 +85,20 @@
         div.innerHTML = `
           ${videoNumber}<br>
           <video id="video2_${videoNumber}" width="100%"></video>
-          <canvas id="canvas2_${videoNumber}" width="100%" style="display: none;"></canvas>
           <input type='button' value='HLS' onclick="pot1('https://ch${videoNumber}-nlivecdn.spotvnow.co.kr/ch${videoNumber}/decr/medialist_14173921312004482655_hls.m3u8');"></input>
           <input type='button' value='카팟' onclick="pot2('https://ch${videoNumber}-nlivecdn.spotvnow.co.kr/ch${videoNumber}/decr/medialist_14173921312004482655_hls.m3u8');"></input>
         `;
         wrapperSet2.appendChild(div);
         const video = document.getElementById('video2_' + videoNumber);
-        const canvas = document.getElementById('canvas2_' + videoNumber);
         callVideo1(video, `https://ch${videoNumber}-nlivecdn.spotvnow.co.kr/ch${videoNumber}/decr/medialist_14173921312004482655_hls.m3u8`);
-
-        video.addEventListener('play', function() {
-          canvas.style.display = 'none';
-        });
-        video.addEventListener('pause', function() {
-          canvas.style.display = 'block';
-          captureFrame(video, canvas);
-        });
-        video.addEventListener('ended', function() {
-          canvas.style.display = 'block';
-          captureFrame(video, canvas);
-        });
+        checkVideoState(video, videoNumber);
       }
     });
   </script>
 </head>
 <body>
   <div class="wrapper" id="wrapperSet2">
-    <div class="title">번호 채널)</div>
+    <div class="title">번호 채널</div>
   </div>
 </body>
 </html>
