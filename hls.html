@@ -13,7 +13,6 @@
       padding: 5px;
       word-break: normal;
       text-align: center;
-      display: none; /* 기본적으로 모든 채널 숨김 */
     }
     .wrapper {
       display: grid;
@@ -44,15 +43,11 @@
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, function() {
           video.play();
-          // 비디오가 재생 중이면 해당 채널 표시
-          video.parentElement.style.display = 'block';
         });
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = url;
         video.addEventListener('canplay', function() {
           video.play();
-          // 비디오가 재생 중이면 해당 채널 표시
-          video.parentElement.style.display = 'block';
         });
       }
     }
