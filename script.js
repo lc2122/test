@@ -6,10 +6,10 @@ const CHANNELS = {
         color: '#FF0000',
         url: (id) => `https://www.youtube.com/embed/live_stream?channel=${id}`
     },
-    forest: {
-        buttonLabel: '숙제2',
+    spo: {
+        buttonLabel: '스포',
         color: '#00aaff',
-        url: () => 'https://play.sooplive.co.kr/aflol/281494910/embed'
+        url: () => 'https://lc2122.github.io/lolcast/hls.html'
     },
     flow: {
         buttonLabel: 'flow',
@@ -21,7 +21,7 @@ const CHANNELS = {
 const videoSection = document.getElementById('video-section');
 const videoIframe = document.getElementById('video-iframe');
 const youtubeBtn = document.getElementById('youtube-btn');
-const forestBtn = document.getElementById('forest-btn');
+const spoBtn = document.getElementById('spo-btn');
 const flowBtn = document.getElementById('flow-btn');
 const inputBtn = document.getElementById('input-btn');
 const goBtn = document.getElementById('go-btn');
@@ -86,10 +86,10 @@ youtubeBtn.addEventListener('click', () => {
 });
 
 // 숲 버튼
-forestBtn.addEventListener('click', () => {
+spoBtn.addEventListener('click', () => {
     multiviewCheckbox.checked = false;
     showSingleInput();
-    setSingleViewContent(CHANNELS.forest.url());
+    setSingleViewContent(CHANNELS.spo.url());
 });
 
 // flow 버튼
