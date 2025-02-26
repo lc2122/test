@@ -13,7 +13,7 @@
       padding: 5px;
       word-break: normal;
       text-align: center;
-    } 
+    }
     .wrapper {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -34,30 +34,45 @@
       border-bottom: 1px solid #ccc;
     }
   </style>
+  <script src="https://fastly.jsdelivr.net/npm/hls.js@latest"></script>
   <script>
+    let currentVideo = null; // 현재 재생 중인 비디오 정보 저장
+
     function callVideo1(video, url) {
-      fetch(url)
-        .then(response => response.text())
-        .then(data => {
-          const parser = new DOMParser();
-          const xmlDoc = parser.parseFromString(data, 'text/xml');
-          const currentStream = xmlDoc.querySelector('STREAM');
-          const currentChannel = currentStream.getAttribute('name');
-          console.log('현재 영상이 나오는 채널:', currentChannel);
-          // 현재 영상이 나오는 채널만 화면에 뜨게 하기
-          if (currentChannel === '채널 이름') {
-            video.style.display = 'block';
-          } else {
-            video.style.display = 'none';
-          }
+      if (Hls.isSupported()) {
+        var hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, function() {
+          video.play();
         });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+        video.addEventListener('canplay', function() {
+          video.play();
+        });
+      }
     }
 
     function pot1(url) {
       window.open(url, '_blank');
     }
+
     function pot2(url) {
       window.open('potplayer://' + url, '_blank'); 
+    }
+
+    function showVideo(videoNumber) {
+      // 기존 비디오 숨기기
+      const wrapperSet2 = document.getElementById('wrapperSet2');
+      for (let i = 1; i <= 40; i++) {
+        const videoDiv = wrapperSet2.children[i - 1];
+        videoDiv.style.display = 'none';
+      }
+
+      // 현재 비디오만 보이게 하기
+      const videoDiv = wrapperSet2.children[videoNumber - 1];
+      videoDiv.style.display = 'block';
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -77,6 +92,12 @@
         wrapperSet2.appendChild(div);
         const video = document.getElementById('video2_' + videoNumber);
         callVideo1(video, `https://ch${videoNumber}-nlivecdn.spotvnow.co.kr/ch${videoNumber}/decr/medialist_14173921312004482655_hls.m3u8`);
+
+        // 비디오 재생 이벤트
+        video.addEventListener('play', function() {
+          currentVideo = videoNumber;
+          showVideo(videoNumber);
+        });
       }
     });
   </script>
