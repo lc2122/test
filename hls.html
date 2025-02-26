@@ -13,6 +13,7 @@
       padding: 5px;
       word-break: normal;
       text-align: center;
+      display: none; /* 초기에는 모든 비디오를 숨깁니다. */
     }
     .wrapper {
       display: grid;
@@ -59,18 +60,20 @@
       window.open('potplayer://' + url, '_blank'); 
     }
 
-    function checkVideoState(video, videoNumber) {
-      video.addEventListener('loadedmetadata', function() {
-        console.log(`Video ${videoNumber} metadata loaded`);
-      });
-      video.addEventListener('canplay', function() {
-        console.log(`Video ${videoNumber} can play`);
-      });
+    function checkVideoState(video, videoNumber, div) {
       video.addEventListener('playing', function() {
         console.log(`Video ${videoNumber} is playing`);
+        div.style.display = 'block'; // 비디오가 재생 중일 때 해당 비디오 컨테이너를 표시합니다.
+      });
+      video.addEventListener('pause', function() {
+        div.style.display = 'none'; // 비디오가 일시 정지되었을 때 해당 비디오 컨테이너를 숨깁니다.
+      });
+      video.addEventListener('ended', function() {
+        div.style.display = 'none'; // 비디오가 종료되었을 때 해당 비디오 컨테이너를 숨깁니다.
       });
       video.addEventListener('error', function(event) {
         console.error(`Video ${videoNumber} error:`, event.target.error);
+        div.style.display = 'none'; // 비디오 로드 중 오류가 발생했을 때 해당 비디오 컨테이너를 숨깁니다.
       });
     }
 
@@ -91,7 +94,7 @@
         wrapperSet2.appendChild(div);
         const video = document.getElementById('video2_' + videoNumber);
         callVideo1(video, `https://ch${videoNumber}-nlivecdn.spotvnow.co.kr/ch${videoNumber}/decr/medialist_14173921312004482655_hls.m3u8`);
-        checkVideoState(video, videoNumber);
+        checkVideoState(video, videoNumber, div);
       }
     });
   </script>
