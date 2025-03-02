@@ -53,7 +53,11 @@ async function fetchChzzkLiveFollowing() {
     const apiUrl = 'https://api.chzzk.naver.com/service/v1/channels/followings/live';
     try {
         const response = await fetch(apiUrl, { credentials: 'include' });
-        if (!response.ok) throw new Error('API 요청 실패');
+        console.log('응답 상태:', response.status, response.statusText); // 상태 코드와 메시지 출력
+        if (!response.ok) {
+            const errorText = await response.text(); // 응답 본문 확인
+            throw new Error(`API 요청 실패: ${response.status} - ${errorText}`);
+        }
         const data = await response.json();
         return data.content?.followingList || [];
     } catch (error) {
