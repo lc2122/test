@@ -47,32 +47,18 @@ let multiviewUrlInputCounter = 0;
 // 즐겨찾기 데이터
 let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 
-/* Dostream 스트리밍 리스트 가져오기 */
-async function fetchStreamList() {
-    const apiUrl = 'https://www.dostream.com/dev/stream_list.php';
-    try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) throw new Error(`API 오류: ${response.status}`);
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error('Dostream API Error:', error);
-        return [];
-    }
-}
-
-/* SPOTV M3U8 채널 상태 체크 (1~40) */
+/* SPOTV M3U8 채널 상태 체크 (1~40, 병렬 처리) */
 async function fetchM3U8LiveStatus() {
     const liveChannelIds = [];
-    for (let videoNumber = 1; videoNumber <= 40; videoNumber++) {
-        const m3u8Url = `https://ch${videoNumber}-nlivecdn.spotvnow.co.kr/ch${videoNumber}/decr/medialist_14173921312004482655_hls.m3u8`;
+    const requests = Array.from({ length: 40 }, (_, i) => i + 1).map(async (videoNumber) => {
+        const m3u8Url = `https://cors-anywhere.herokuapp.com/https://ch${videoNumber}-nlivecdn.spotvnow.co.kr/ch${videoNumber}/decr/medialist_14173921312004482655_hls.m3u8`;
         try {
             const response = await fetch(m3u8Url, { method: 'HEAD' }); // HEAD 요청으로 상태 확인
             const isLive = response.ok && response.status === 200;
             console.log(`SPOTV Channel ${videoNumber} isLive:`, isLive);
 
             if (isLive) {
-                liveChannelIds.push({
+                return {
                     channelId: `ch${videoNumber}`,
                     channelName: `SPOTV Channel ${videoNumber}`,
                     channelImageUrl: null,
@@ -81,51 +67,39 @@ async function fetchM3U8LiveStatus() {
                     viewers: 0, // 시청자 수는 알 수 없으므로 0으로 설정
                     url: m3u8Url,
                     from: 'm3u8'
-                });
+                };
             }
+            return null; // 라이브가 아닌 경우 null 반환
         } catch (e) {
             console.error(`Error checking SPOTV Channel ${videoNumber}:`, e);
+            return null;
         }
-    }
+    });
+
+    const results = await Promise.all(requests); // 모든 요청 병렬 처리
+    results.forEach(result => {
+        if (result) liveChannelIds.push(result); // null이 아닌 결과만 추가
+    });
+
     return liveChannelIds;
 }
 
-/* 스트리밍 리스트 렌더링 (Dostream + SPOTV M3U8) */
+/* SPOTV M3U8 리스트 렌더링 */
 async function renderStreamList() {
-    const dostreamStreams = await fetchStreamList();
     const m3u8Streams = await fetchM3U8LiveStatus();
-    const streams = [...dostreamStreams, ...m3u8Streams]; // 두 리스트 합침
-
     listContent.innerHTML = '';
-    if (streams.length === 0) {
-        listContent.innerHTML = '<p>현재 스트리밍 데이터가 없습니다.</p>';
+    if (m3u8Streams.length === 0) {
+        listContent.innerHTML = '<p>현재 라이브 SPOTV 채널이 없습니다.</p>';
     } else {
-        streams.forEach(stream => {
+        m3u8Streams.forEach(stream => {
             const item = document.createElement('div');
             item.className = 'list-item';
             item.innerHTML = `
-                <span>${stream.title || stream.liveTitle} (${stream.from}) - ${stream.streamer || stream.channelName} [${stream.viewers}명 시청]</span>
+                <span>${stream.liveTitle} (${stream.from}) - ${stream.channelName} [${stream.viewers}명 시청]</span>
             `;
             item.style.cursor = 'pointer';
             item.addEventListener('click', () => {
-                let url;
-                switch (stream.from) {
-                    case 'chzzk':
-                        url = `https://chzzk.naver.com/live${stream.url.split('/chzzk')[1]}`;
-                        break;
-                    case 'twitch':
-                        url = `https://player.twitch.tv/?channel=${stream.streamer}&parent=lc2122.github.io`;
-                        break;
-                    case 'afreeca':
-                        url = `https://play.sooplive.co.kr${stream.url.split('/afreeca')[1]}/embed`;
-                        break;
-                    case 'm3u8':
-                        url = stream.url; // M3U8 URL 직접 사용
-                        break;
-                    default:
-                        url = stream.url;
-                }
-                setSingleViewContent(url);
+                setSingleViewContent(stream.url); // M3U8 URL 직접 사용
                 listModal.style.display = 'none';
             });
             listContent.appendChild(item);
