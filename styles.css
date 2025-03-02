@@ -51,6 +51,46 @@ body {
     background-color: #555;
 }
 
+#chzzk-btn {
+    background-color: #00aaff; /* 치지직 색상 */
+}
+
+/* 치지직 모달 스타일 */
+#chzzk-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    width: 90%;
+    max-width: 400px;
+    box-sizing: border-box;
+}
+
+#chzzk-list {
+    max-height: 300px;
+    overflow-y: auto;
+    width: 100%;
+}
+
+.chzzk-item {
+    padding: 5px;
+    border-bottom: 1px solid #eee;
+}
+
+.chzzk-item.live {
+    background-color: #e0ffe0;
+    cursor: pointer;
+}
+
+.chzzk-item.live:hover {
+    background-color: #d0ffd0;
+}
+
 /* Input modal styles */
 #input-modal {
     display: none;
