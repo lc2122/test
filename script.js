@@ -35,6 +35,10 @@ const multiviewLayoutSelect = document.getElementById('multiview-layout-select')
 const multiviewUrlInputs = document.getElementById('multiview-url-inputs');
 const favoriteDragContainer = document.getElementById('favorite-drag-container');
 const favoriteDragList = document.getElementById('favorite-drag-list');
+const chzzkBtn = document.getElementById('chzzk-btn'); // 치지직 버튼
+const chzzkModal = document.getElementById('chzzk-modal'); // 치지직 모달
+const chzzkList = document.getElementById('chzzk-list'); // 치지직 리스트
+const closeChzzkModal = document.getElementById('close-chzzk-modal'); // 치지직 모달 닫기 버튼
 
 // 멀티뷰 관련 상태 관리
 let currentMultiviewLayout = 1;
@@ -42,19 +46,94 @@ let multiviewUrlInputCounter = 0;
 
 // 즐겨찾기 데이터 (localStorage에서 불러오기)
 let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+let lastLiveStatus = {}; // 치지직 라이브 상태 저장
 
-/* ------------------------- 드래그 앤 드롭 관련 함수 ------------------------- */
+/* 치지직 API 함수 */
+async function fetchChzzkFollowing() {
+    const apiUrl = 'https://api.chzzk.naver.com/service/v1/channels/followings';
+    try {
+        const response = await fetch(apiUrl, { credentials: 'include' });
+        if (!response.ok) throw new Error('API 요청 실패');
+        const data = await response.json();
+        return data.content?.data || [];
+    } catch (error) {
+        console.error('CHZZK Following API Error:', error);
+        return [];
+    }
+}
 
-// 즐겨찾기 드래그 목록 렌더링 (멀티뷰용)
+async function fetchChzzkLiveFollowing() {
+    const apiUrl = 'https://api.chzzk.naver.com/service/v1/channels/followings/live';
+    try {
+        const response = await fetch(apiUrl, { credentials: 'include' });
+        if (!response.ok) throw new Error('API 요청 실패');
+        const data = await response.json();
+        return data.content?.followingList || [];
+    } catch (error) {
+        console.error('CHZZK Live API Error:', error);
+        return [];
+    }
+}
+
+/* 치지직 라이브 상태 체크 및 알림 */
+async function checkChzzkLiveStatus() {
+    const liveChannels = await fetchChzzkLiveFollowing();
+    liveChannels.forEach(channel => {
+        const channelId = channel.channelId;
+        if (!lastLiveStatus[channelId] && channel.openLive) {
+            if (Notification.permission === 'granted') {
+                new Notification(`${channel.channelName} 방송 시작!`, {
+                    body: channel.liveTitle || '방송 중',
+                    icon: channel.channelImageUrl || ''
+                });
+            }
+        }
+    });
+    lastLiveStatus = liveChannels.reduce((acc, ch) => {
+        acc[ch.channelId] = ch.openLive;
+        return acc;
+    }, {});
+}
+
+/* 치지직 팔로우 리스트 렌더링 */
+async function renderChzzkList() {
+    const allChannels = await fetchChzzkFollowing();
+    const liveChannels = await fetchChzzkLiveFollowing();
+    const liveChannelIds = new Set(liveChannels.map(ch => ch.channelId));
+
+    chzzkList.innerHTML = '';
+    if (allChannels.length === 0) {
+        chzzkList.innerHTML = '<p>팔로우한 채널이 없습니다. 로그인 상태를 확인하세요.</p>';
+    } else {
+        allChannels.forEach(channel => {
+            const isLive = liveChannelIds.has(channel.channelId);
+            const liveChannel = liveChannels.find(ch => ch.channelId === channel.channelId);
+            const item = document.createElement('div');
+            item.className = `chzzk-item ${isLive ? 'live' : ''}`;
+            item.innerHTML = `
+                <span>${channel.channelName} - ${isLive ? '방송 중' : '방송 종료'}</span>
+            `;
+            if (isLive) {
+                item.style.cursor = 'pointer';
+                item.addEventListener('click', () => {
+                    setSingleViewContent(`https://chzzk.naver.com/live/${channel.channelId}`);
+                    chzzkModal.style.display = 'none';
+                });
+            }
+            chzzkList.appendChild(item);
+        });
+    }
+    chzzkModal.style.display = 'block';
+}
+
+/* 드래그 앤 드롭 관련 함수 */
 function updateFavoriteDragContainer() {
-    // favoriteDragList 내부 초기화
     favoriteDragList.innerHTML = '';
     favorites.forEach((fav, index) => {
         const favItem = document.createElement('div');
         favItem.className = 'favorite-drag-item';
         favItem.textContent = fav.name;
         favItem.setAttribute('draggable', 'true');
-        // 드래그 시작 시 URL 데이터를 dataTransfer에 설정
         favItem.addEventListener('dragstart', (e) => {
             e.dataTransfer.setData('text/plain', fav.url);
         });
@@ -62,7 +141,6 @@ function updateFavoriteDragContainer() {
     });
 }
 
-/* 멀티뷰 입력 필드에 드래그 앤 드롭 이벤트 추가 */
 function addDragDropEvents(input) {
     input.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -76,38 +154,39 @@ function addDragDropEvents(input) {
     });
 }
 
-/* ------------------------- 멀티뷰 및 단일뷰 관련 함수 ------------------------- */
-
-// YouTube 버튼
+/* 멀티뷰 및 단일뷰 관련 함수 */
 youtubeBtn.addEventListener('click', () => {
     multiviewCheckbox.checked = false;
     showSingleInput();
     setSingleViewContent(CHANNELS.youtube.url(CHANNELS.youtube.id));
 });
 
-// 숲 버튼
 spoBtn.addEventListener('click', () => {
     multiviewCheckbox.checked = false;
     showSingleInput();
     setSingleViewContent(CHANNELS.spo.url());
 });
 
-// flow 버튼
 flowBtn.addEventListener('click', () => {
     multiviewCheckbox.checked = false;
     showSingleInput();
     setSingleViewContent(CHANNELS.flow.url());
 });
 
-// "Input" 버튼 클릭 시 모달 열기
 inputBtn.addEventListener('click', () => {
     inputModal.style.display = 'block';
-    // 모달 열 때 단일 뷰 모드로 설정
     multiviewCheckbox.checked = false;
     showSingleInput();
 });
 
-// 멀티뷰 체크박스 변경 시 표시 전환
+chzzkBtn.addEventListener('click', () => {
+    renderChzzkList();
+});
+
+closeChzzkModal.addEventListener('click', () => {
+    chzzkModal.style.display = 'none';
+});
+
 multiviewCheckbox.addEventListener('change', () => {
     if (multiviewCheckbox.checked) {
         showMultiviewOptions();
@@ -116,13 +195,11 @@ multiviewCheckbox.addEventListener('change', () => {
     }
 });
 
-// 멀티뷰 레이아웃 선택 변경 시
 multiviewLayoutSelect.addEventListener('change', () => {
     currentMultiviewLayout = parseInt(multiviewLayoutSelect.value);
     updateMultiviewUrlInputs();
 });
 
-// "Go" 버튼 클릭 시 멀티뷰 또는 단일뷰 실행
 goBtn.addEventListener('click', () => {
     if (multiviewCheckbox.checked) {
         startMultiview();
@@ -132,12 +209,10 @@ goBtn.addEventListener('click', () => {
     inputModal.style.display = 'none';
 });
 
-// "닫기" 버튼 클릭 시 입력 모달 닫기
 closeBtn.addEventListener('click', () => {
     inputModal.style.display = 'none';
 });
 
-/* 멀티뷰 관련 함수 */
 function showSingleInput() {
     singleUrlInputContainer.style.display = 'block';
     multiviewOptions.style.display = 'none';
@@ -147,13 +222,11 @@ function showSingleInput() {
 function showMultiviewOptions() {
     singleUrlInputContainer.style.display = 'none';
     multiviewOptions.style.display = 'block';
-    // 멀티뷰 옵션 표시될 때 입력 필드 및 드래그 영역 초기화 후 생성
     multiviewUrlInputs.innerHTML = '';
     multiviewUrlInputCounter = 0;
     for (let i = 0; i < currentMultiviewLayout; i++) {
         addMultiviewInput();
     }
-    // 업데이트한 즐겨찾기 드래그 목록도 함께 업데이트
     updateFavoriteDragContainer();
 }
 
@@ -179,7 +252,6 @@ function addMultiviewInput() {
     input.type = 'text';
     input.className = 'multiview-input';
     input.placeholder = `URL ${multiviewUrlInputCounter + 1}`;
-    // 드래그 앤 드롭 이벤트 등록
     addDragDropEvents(input);
     multiviewUrlInputs.appendChild(input);
     multiviewUrlInputCounter++;
@@ -193,7 +265,6 @@ function startSingleView() {
 function setSingleViewContent(url) {
     const transformedUrl = transformUrl(url);
     if (transformedUrl) {
-        // URL에서 쿼리스트링 제거 후 m3u8 여부 확인
         const urlWithoutQuery = transformedUrl.split('?')[0];
         if (urlWithoutQuery.endsWith('.m3u8')) {
             videoIframe.src = getPlayerUrl(transformedUrl);
@@ -204,19 +275,15 @@ function setSingleViewContent(url) {
 }
 
 function startMultiview() {
-    // 멀티뷰 입력 필드의 값 읽어오기
     const inputs = multiviewUrlInputs.querySelectorAll('.multiview-input');
     const urls = Array.from(inputs).map(input => {
         const trimmed = input.value.trim();
         const transformed = transformUrl(trimmed);
         if (!transformed) return '';
         const urlWithoutQuery = transformed.split('?')[0];
-        return urlWithoutQuery.endsWith('.m3u8')
-            ? getPlayerUrl(transformed)
-            : transformed;
+        return urlWithoutQuery.endsWith('.m3u8') ? getPlayerUrl(transformed) : transformed;
     });
 
-    // 1분할 예외 처리 (실제로 단일뷰로 전환)
     if (currentMultiviewLayout === 1) {
         multiviewCheckbox.checked = false;
         showSingleInput();
@@ -224,7 +291,6 @@ function startMultiview() {
         return;
     }
 
-    // 멀티뷰 컨테이너 생성
     videoSection.innerHTML = `
         <div class="multiview-container" 
              style="grid-template-columns: repeat(${getMultiviewColumns(currentMultiviewLayout)}, 1fr);">
@@ -236,7 +302,6 @@ function startMultiview() {
         </div>
     `;
 
-    // 멀티뷰 모드에서 iframe 크기 조정
     const multiviewItems = videoSection.querySelectorAll('.multiview-item');
     multiviewItems.forEach(item => {
         const iframe = item.querySelector('iframe');
@@ -252,24 +317,21 @@ function getMultiviewColumns(layout) {
 }
 
 function getPlayerUrl(m3u8Url) {
-  const ua = navigator.userAgent;
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-  const isChrome = /Chrome/i.test(ua);
-  const isWhale = /Whale/i.test(ua);
-  const isEdge = /Edg/i.test(ua);
-  // 모바일 브라우저인 경우 Livereacting 플레이어 사용
-  if (isMobile) {
+    const ua = navigator.userAgent;
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    const isChrome = /Chrome/i.test(ua);
+    const isWhale = /Whale/i.test(ua);
+    const isEdge = /Edg/i.test(ua);
+    if (isMobile) {
+        return `https://www.livereacting.com/tools/hls-player-embed?url=${encodeURIComponent(m3u8Url)}`;
+    }
+    if (isChrome || isWhale || isEdge) {
+        return `chrome-extension://eakdijdofmnclopcffkkgmndadhbjgka/player.html#${m3u8Url}`;
+    }
     return `https://www.livereacting.com/tools/hls-player-embed?url=${encodeURIComponent(m3u8Url)}`;
-  }
-  // 데스크탑 환경에서 Chrome, Whale, Edge인 경우 chrome-extension URL 사용
-  if (isChrome || isWhale || isEdge) {
-    return `chrome-extension://eakdijdofmnclopcffkkgmndadhbjgka/player.html#${m3u8Url}`;
-  }
-  // 그 외의 브라우저에서는 Livereacting 플레이어 사용 (데스크탑)
-  return `https://www.livereacting.com/tools/hls-player-embed?url=${encodeURIComponent(m3u8Url)}`;
 }
 
-/* 즐겨찾기 모달 관련 기존 함수 (독립적 동작) */
+/* 즐겨찾기 모달 관련 함수 */
 function renderFavorites() {
     const favoriteModal = document.getElementById('favorite-modal');
     const favoriteList = document.getElementById('favorite-list');
@@ -286,9 +348,7 @@ function renderFavorites() {
                 showSingleInput();
                 const transformedUrl = transformUrl(favorite.url);
                 if (transformedUrl) {
-                    videoIframe.src = transformedUrl.endsWith('.m3u8') 
-                        ? getPlayerUrl(transformedUrl) 
-                        : transformedUrl;
+                    videoIframe.src = transformedUrl.endsWith('.m3u8') ? getPlayerUrl(transformedUrl) : transformedUrl;
                     favoriteModal.style.display = 'none';
                 }
             }
@@ -343,17 +403,9 @@ addFavoriteBtn.addEventListener('click', () => {
 /* URL 변환 함수 */
 function transformUrl(url) {
     if (!url) return null;
-    
-    // m3u8 URL 처리
-    if (url.includes('.m3u8')) {
-        return url; // m3u8 URL은 그대로 반환
-    }
-
-    // 기존 로직 (단축 URL 및 기타 URL 처리)
+    if (url.includes('.m3u8')) return url;
     const isShortForm = /^(youtube|twitch|chzzk|kick|afreeca)\/[^\/]+$/.test(url);
-    if (url === 'https://play.sooplive.co.kr/aflol/281494910/embed') {
-        return url;
-    }
+    if (url === 'https://play.sooplive.co.kr/aflol/281494910/embed') return url;
     if (isShortForm) {
         const [platform, channelId] = url.split('/');
         switch (platform) {
@@ -383,7 +435,7 @@ function transformUrl(url) {
     alert('지원하지 않는 URL 형식입니다.'); return null;
 }
 
-// 초기 로드 및 해시 처리
+/* 초기 로드 및 알림 설정 */
 window.addEventListener('load', () => {
     videoIframe.src = CHANNELS.flow.url();
     const hash = window.location.hash;
@@ -393,9 +445,16 @@ window.addEventListener('load', () => {
     else if (hash.startsWith('#/soop/')) setSingleViewContent(`https://play.sooplive.co.kr/${hash.split('/')[2]}/embed`);
     else if (hash.startsWith('#/kick/')) setSingleViewContent(`https://player.kick.com/${hash.split('/')[2]}`);
     else if (hash.startsWith('#/hls/')) {
-    const m3u8Url = decodeURIComponent(hash.split('#/hls/')[1]);
-    if (m3u8Url.includes('.m3u8')) {
-        setSingleViewContent(m3u8Url); // getPlayerUrl()를 미리 호출하지 않음
+        const m3u8Url = decodeURIComponent(hash.split('#/hls/')[1]);
+        if (m3u8Url.includes('.m3u8')) {
+            setSingleViewContent(m3u8Url);
+        }
     }
-}
+
+    // 알림 권한 요청 및 주기적 체크
+    Notification.requestPermission().then(perm => {
+        if (perm === 'granted') {
+            setInterval(checkChzzkLiveStatus, 60000); // 1분마다 체크
+        }
+    });
 });
