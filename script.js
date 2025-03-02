@@ -35,10 +35,10 @@ const multiviewLayoutSelect = document.getElementById('multiview-layout-select')
 const multiviewUrlInputs = document.getElementById('multiview-url-inputs');
 const favoriteDragContainer = document.getElementById('favorite-drag-container');
 const favoriteDragList = document.getElementById('favorite-drag-list');
-const chzzkBtn = document.getElementById('chzzk-btn');
-const chzzkModal = document.getElementById('chzzk-modal');
-const chzzkList = document.getElementById('chzzk-list');
-const closeChzzkModal = document.getElementById('close-chzzk-modal');
+const listBtn = document.getElementById('list-btn'); // 리스트 버튼으로 변경
+const listModal = document.getElementById('list-modal');
+const listContent = document.getElementById('list-content');
+const closeListModal = document.getElementById('close-list-modal');
 
 // 멀티뷰 관련 상태 관리
 let currentMultiviewLayout = 1;
@@ -46,68 +46,57 @@ let multiviewUrlInputCounter = 0;
 
 // 즐겨찾기 데이터 (localStorage에서 불러오기)
 let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-let lastLiveStatus = {}; // 치지직 라이브 상태 저장
 
-/* 치지직 API 함수 (라이브 채널만 가져오기) */
-async function fetchChzzkLiveFollowing() {
-    const apiUrl = 'https://api.chzzk.naver.com/service/v1/channels/followings/live';
+/* Dostream 스트리밍 리스트 가져오기 */
+async function fetchStreamList() {
+    const apiUrl = 'https://www.dostream.com/dev/stream_list.php';
     try {
-        const response = await fetch(apiUrl, { credentials: 'include' });
-        console.log('응답 상태:', response.status, response.statusText); // 상태 코드와 메시지 출력
-        if (!response.ok) {
-            const errorText = await response.text(); // 응답 본문 확인
-            throw new Error(`API 요청 실패: ${response.status} - ${errorText}`);
-        }
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error(`API 오류: ${response.status}`);
         const data = await response.json();
-        return data.content?.followingList || [];
+        return data;
     } catch (error) {
-        console.error('CHZZK Live API Error:', error);
+        console.error('Dostream API Error:', error);
         return [];
     }
 }
 
-/* 치지직 라이브 상태 체크 및 알림 */
-async function checkChzzkLiveStatus() {
-    const liveChannels = await fetchChzzkLiveFollowing();
-    liveChannels.forEach(channel => {
-        const channelId = channel.channelId;
-        if (!lastLiveStatus[channelId] && channel.openLive) {
-            if (Notification.permission === 'granted') {
-                new Notification(`${channel.channelName} 방송 시작!`, {
-                    body: channel.liveTitle || '방송 중',
-                    icon: channel.channelImageUrl || ''
-                });
-            }
-        }
-    });
-    lastLiveStatus = liveChannels.reduce((acc, ch) => {
-        acc[ch.channelId] = ch.openLive;
-        return acc;
-    }, {});
-}
-
-/* 치지직 라이브 채널 리스트 렌더링 */
-async function renderChzzkList() {
-    const liveChannels = await fetchChzzkLiveFollowing();
-    chzzkList.innerHTML = '';
-    if (liveChannels.length === 0) {
-        chzzkList.innerHTML = '<p>현재 방송 중인 팔로우 채널이 없습니다.</p>';
+/* 스트리밍 리스트 렌더링 */
+async function renderStreamList() {
+    const streams = await fetchStreamList();
+    listContent.innerHTML = '';
+    if (streams.length === 0) {
+        listContent.innerHTML = '<p>현재 스트리밍 데이터가 없습니다.</p>';
     } else {
-        liveChannels.forEach(channel => {
+        streams.forEach(stream => {
             const item = document.createElement('div');
-            item.className = 'chzzk-item live';
+            item.className = 'list-item';
             item.innerHTML = `
-                <span>${channel.channelName} - 방송 중</span>
+                <span>${stream.title} (${stream.from}) - ${stream.streamer} [${stream.viewers}명 시청]</span>
             `;
             item.style.cursor = 'pointer';
             item.addEventListener('click', () => {
-                setSingleViewContent(`https://chzzk.naver.com/live/${channel.channelId}`);
-                chzzkModal.style.display = 'none';
+                let url;
+                switch (stream.from) {
+                    case 'chzzk':
+                        url = `https://chzzk.naver.com/live${stream.url.split('/chzzk')[1]}`;
+                        break;
+                    case 'twitch':
+                        url = `https://player.twitch.tv/?channel=${stream.streamer}&parent=lc2122.github.io`; // 실제 도메인으로 변경
+                        break;
+                    case 'afreeca':
+                        url = `https://play.sooplive.co.kr${stream.url.split('/afreeca')[1]}/embed`;
+                        break;
+                    default:
+                        url = stream.url;
+                }
+                setSingleViewContent(url);
+                listModal.style.display = 'none';
             });
-            chzzkList.appendChild(item);
+            listContent.appendChild(item);
         });
     }
-    chzzkModal.style.display = 'block';
+    listModal.style.display = 'block';
 }
 
 /* 드래그 앤 드롭 관련 함수 */
@@ -132,13 +121,11 @@ function addDragDropEvents(input) {
     input.addEventListener('drop', (e) => {
         e.preventDefault();
         const droppedUrl = e.dataTransfer.getData('text/plain');
-        if (droppedUrl) {
-            input.value = droppedUrl;
-        }
+        if (droppedUrl) input.value = droppedUrl;
     });
 }
 
-/* 멀티뷰 및 단일뷰 관련 함수 */
+/* 이벤트 리스너 */
 youtubeBtn.addEventListener('click', () => {
     multiviewCheckbox.checked = false;
     showSingleInput();
@@ -163,20 +150,17 @@ inputBtn.addEventListener('click', () => {
     showSingleInput();
 });
 
-chzzkBtn.addEventListener('click', () => {
-    renderChzzkList();
+listBtn.addEventListener('click', () => {
+    renderStreamList();
 });
 
-closeChzzkModal.addEventListener('click', () => {
-    chzzkModal.style.display = 'none';
+closeListModal.addEventListener('click', () => {
+    listModal.style.display = 'none';
 });
 
 multiviewCheckbox.addEventListener('change', () => {
-    if (multiviewCheckbox.checked) {
-        showMultiviewOptions();
-    } else {
-        showSingleInput();
-    }
+    if (multiviewCheckbox.checked) showMultiviewOptions();
+    else showSingleInput();
 });
 
 multiviewLayoutSelect.addEventListener('change', () => {
@@ -185,11 +169,8 @@ multiviewLayoutSelect.addEventListener('change', () => {
 });
 
 goBtn.addEventListener('click', () => {
-    if (multiviewCheckbox.checked) {
-        startMultiview();
-    } else {
-        startSingleView();
-    }
+    if (multiviewCheckbox.checked) startMultiview();
+    else startSingleView();
     inputModal.style.display = 'none';
 });
 
@@ -197,6 +178,7 @@ closeBtn.addEventListener('click', () => {
     inputModal.style.display = 'none';
 });
 
+/* 멀티뷰 및 단일뷰 관련 함수 */
 function showSingleInput() {
     singleUrlInputContainer.style.display = 'block';
     multiviewOptions.style.display = 'none';
@@ -218,9 +200,7 @@ function updateMultiviewUrlInputs() {
     const currentInputs = multiviewUrlInputs.querySelectorAll('.multiview-input');
     const diff = currentMultiviewLayout - currentInputs.length;
     if (diff > 0) {
-        for (let i = 0; i < diff; i++) {
-            addMultiviewInput();
-        }
+        for (let i = 0; i < diff; i++) addMultiviewInput();
     } else if (diff < 0) {
         for (let i = 0; i < -diff; i++) {
             if (multiviewUrlInputs.lastChild) {
@@ -306,12 +286,8 @@ function getPlayerUrl(m3u8Url) {
     const isChrome = /Chrome/i.test(ua);
     const isWhale = /Whale/i.test(ua);
     const isEdge = /Edg/i.test(ua);
-    if (isMobile) {
-        return `https://www.livereacting.com/tools/hls-player-embed?url=${encodeURIComponent(m3u8Url)}`;
-    }
-    if (isChrome || isWhale || isEdge) {
-        return `chrome-extension://eakdijdofmnclopcffkkgmndadhbjgka/player.html#${m3u8Url}`;
-    }
+    if (isMobile) return `https://www.livereacting.com/tools/hls-player-embed?url=${encodeURIComponent(m3u8Url)}`;
+    if (isChrome || isWhale || isEdge) return `chrome-extension://eakdijdofmnclopcffkkgmndadhbjgka/player.html#${m3u8Url}`;
     return `https://www.livereacting.com/tools/hls-player-embed?url=${encodeURIComponent(m3u8Url)}`;
 }
 
@@ -419,7 +395,7 @@ function transformUrl(url) {
     alert('지원하지 않는 URL 형식입니다.'); return null;
 }
 
-/* 초기 로드 및 알림 설정 */
+/* 초기 로드 */
 window.addEventListener('load', () => {
     videoIframe.src = CHANNELS.flow.url();
     const hash = window.location.hash;
@@ -430,15 +406,6 @@ window.addEventListener('load', () => {
     else if (hash.startsWith('#/kick/')) setSingleViewContent(`https://player.kick.com/${hash.split('/')[2]}`);
     else if (hash.startsWith('#/hls/')) {
         const m3u8Url = decodeURIComponent(hash.split('#/hls/')[1]);
-        if (m3u8Url.includes('.m3u8')) {
-            setSingleViewContent(m3u8Url);
-        }
+        if (m3u8Url.includes('.m3u8')) setSingleViewContent(m3u8Url);
     }
-
-    // 알림 권한 요청 및 주기적 체크
-    Notification.requestPermission().then(perm => {
-        if (perm === 'granted') {
-            setInterval(checkChzzkLiveStatus, 60000); // 1분마다 체크
-        }
-    });
 });
