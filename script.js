@@ -35,7 +35,7 @@ const multiviewLayoutSelect = document.getElementById('multiview-layout-select')
 const multiviewUrlInputs = document.getElementById('multiview-url-inputs');
 const favoriteDragContainer = document.getElementById('favorite-drag-container');
 const favoriteDragList = document.getElementById('favorite-drag-list');
-const listBtn = document.getElementById('list-btn'); // 리스트 버튼으로 변경
+const listBtn = document.getElementById('list-btn');
 const listModal = document.getElementById('list-modal');
 const listContent = document.getElementById('list-content');
 const closeListModal = document.getElementById('close-list-modal');
@@ -44,7 +44,7 @@ const closeListModal = document.getElementById('close-list-modal');
 let currentMultiviewLayout = 1;
 let multiviewUrlInputCounter = 0;
 
-// 즐겨찾기 데이터 (localStorage에서 불러오기)
+// 즐겨찾기 데이터
 let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 
 /* Dostream 스트리밍 리스트 가져오기 */
@@ -61,9 +61,41 @@ async function fetchStreamList() {
     }
 }
 
-/* 스트리밍 리스트 렌더링 */
+/* SPOTV M3U8 채널 상태 체크 (1~40) */
+async function fetchM3U8LiveStatus() {
+    const liveChannelIds = [];
+    for (let videoNumber = 1; videoNumber <= 40; videoNumber++) {
+        const m3u8Url = `https://ch${videoNumber}-nlivecdn.spotvnow.co.kr/ch${videoNumber}/decr/medialist_14173921312004482655_hls.m3u8`;
+        try {
+            const response = await fetch(m3u8Url, { method: 'HEAD' }); // HEAD 요청으로 상태 확인
+            const isLive = response.ok && response.status === 200;
+            console.log(`SPOTV Channel ${videoNumber} isLive:`, isLive);
+
+            if (isLive) {
+                liveChannelIds.push({
+                    channelId: `ch${videoNumber}`,
+                    channelName: `SPOTV Channel ${videoNumber}`,
+                    channelImageUrl: null,
+                    openLive: true,
+                    liveTitle: `SPOTV Live Channel ${videoNumber}`,
+                    viewers: 0, // 시청자 수는 알 수 없으므로 0으로 설정
+                    url: m3u8Url,
+                    from: 'm3u8'
+                });
+            }
+        } catch (e) {
+            console.error(`Error checking SPOTV Channel ${videoNumber}:`, e);
+        }
+    }
+    return liveChannelIds;
+}
+
+/* 스트리밍 리스트 렌더링 (Dostream + SPOTV M3U8) */
 async function renderStreamList() {
-    const streams = await fetchStreamList();
+    const dostreamStreams = await fetchStreamList();
+    const m3u8Streams = await fetchM3U8LiveStatus();
+    const streams = [...dostreamStreams, ...m3u8Streams]; // 두 리스트 합침
+
     listContent.innerHTML = '';
     if (streams.length === 0) {
         listContent.innerHTML = '<p>현재 스트리밍 데이터가 없습니다.</p>';
@@ -72,7 +104,7 @@ async function renderStreamList() {
             const item = document.createElement('div');
             item.className = 'list-item';
             item.innerHTML = `
-                <span>${stream.title} (${stream.from}) - ${stream.streamer} [${stream.viewers}명 시청]</span>
+                <span>${stream.title || stream.liveTitle} (${stream.from}) - ${stream.streamer || stream.channelName} [${stream.viewers}명 시청]</span>
             `;
             item.style.cursor = 'pointer';
             item.addEventListener('click', () => {
@@ -82,10 +114,13 @@ async function renderStreamList() {
                         url = `https://chzzk.naver.com/live${stream.url.split('/chzzk')[1]}`;
                         break;
                     case 'twitch':
-                        url = `https://player.twitch.tv/?channel=${stream.streamer}&parent=lc2122.github.io`; // 실제 도메인으로 변경
+                        url = `https://player.twitch.tv/?channel=${stream.streamer}&parent=lc2122.github.io`;
                         break;
                     case 'afreeca':
                         url = `https://play.sooplive.co.kr${stream.url.split('/afreeca')[1]}/embed`;
+                        break;
+                    case 'm3u8':
+                        url = stream.url; // M3U8 URL 직접 사용
                         break;
                     default:
                         url = stream.url;
