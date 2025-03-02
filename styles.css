@@ -51,12 +51,13 @@ body {
     background-color: #555;
 }
 
-#chzzk-btn {
-    background-color: #00aaff; /* 치지직 색상 */
+/* 리스트 버튼 스타일 */
+#list-btn {
+    background-color: #00aaff; /* 치지직 색상 유지 */
 }
 
-/* 치지직 모달 스타일 */
-#chzzk-modal {
+/* 리스트 모달 스타일 */
+#list-modal {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -71,26 +72,21 @@ body {
     box-sizing: border-box;
 }
 
-#chzzk-list {
+#list-content {
     max-height: 300px;
     overflow-y: auto;
     width: 100%;
 }
 
-.chzzk-item {
+.list-item {
     padding: 5px;
     border-bottom: 1px solid #eee;
 }
 
-.chzzk-item.live {
-    background-color: #e0ffe0;
+.list-item:hover {
+    background-color: #f0f0f0;
     cursor: pointer;
 }
-
-.chzzk-item.live:hover {
-    background-color: #d0ffd0;
-}
-
 /* Input modal styles */
 #input-modal {
     display: none;
