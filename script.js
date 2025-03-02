@@ -35,10 +35,10 @@ const multiviewLayoutSelect = document.getElementById('multiview-layout-select')
 const multiviewUrlInputs = document.getElementById('multiview-url-inputs');
 const favoriteDragContainer = document.getElementById('favorite-drag-container');
 const favoriteDragList = document.getElementById('favorite-drag-list');
-const chzzkBtn = document.getElementById('chzzk-btn'); // 치지직 버튼
-const chzzkModal = document.getElementById('chzzk-modal'); // 치지직 모달
-const chzzkList = document.getElementById('chzzk-list'); // 치지직 리스트
-const closeChzzkModal = document.getElementById('close-chzzk-modal'); // 치지직 모달 닫기 버튼
+const chzzkBtn = document.getElementById('chzzk-btn');
+const chzzkModal = document.getElementById('chzzk-modal');
+const chzzkList = document.getElementById('chzzk-list');
+const closeChzzkModal = document.getElementById('close-chzzk-modal');
 
 // 멀티뷰 관련 상태 관리
 let currentMultiviewLayout = 1;
@@ -48,20 +48,7 @@ let multiviewUrlInputCounter = 0;
 let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 let lastLiveStatus = {}; // 치지직 라이브 상태 저장
 
-/* 치지직 API 함수 */
-async function fetchChzzkFollowing() {
-    const apiUrl = 'https://api.chzzk.naver.com/service/v1/channels/followings';
-    try {
-        const response = await fetch(apiUrl, { credentials: 'include' });
-        if (!response.ok) throw new Error('API 요청 실패');
-        const data = await response.json();
-        return data.content?.data || [];
-    } catch (error) {
-        console.error('CHZZK Following API Error:', error);
-        return [];
-    }
-}
-
+/* 치지직 API 함수 (라이브 채널만 가져오기) */
 async function fetchChzzkLiveFollowing() {
     const apiUrl = 'https://api.chzzk.naver.com/service/v1/channels/followings/live';
     try {
@@ -95,31 +82,24 @@ async function checkChzzkLiveStatus() {
     }, {});
 }
 
-/* 치지직 팔로우 리스트 렌더링 */
+/* 치지직 라이브 채널 리스트 렌더링 */
 async function renderChzzkList() {
-    const allChannels = await fetchChzzkFollowing();
     const liveChannels = await fetchChzzkLiveFollowing();
-    const liveChannelIds = new Set(liveChannels.map(ch => ch.channelId));
-
     chzzkList.innerHTML = '';
-    if (allChannels.length === 0) {
-        chzzkList.innerHTML = '<p>팔로우한 채널이 없습니다. 로그인 상태를 확인하세요.</p>';
+    if (liveChannels.length === 0) {
+        chzzkList.innerHTML = '<p>현재 방송 중인 팔로우 채널이 없습니다.</p>';
     } else {
-        allChannels.forEach(channel => {
-            const isLive = liveChannelIds.has(channel.channelId);
-            const liveChannel = liveChannels.find(ch => ch.channelId === channel.channelId);
+        liveChannels.forEach(channel => {
             const item = document.createElement('div');
-            item.className = `chzzk-item ${isLive ? 'live' : ''}`;
+            item.className = 'chzzk-item live';
             item.innerHTML = `
-                <span>${channel.channelName} - ${isLive ? '방송 중' : '방송 종료'}</span>
+                <span>${channel.channelName} - 방송 중</span>
             `;
-            if (isLive) {
-                item.style.cursor = 'pointer';
-                item.addEventListener('click', () => {
-                    setSingleViewContent(`https://chzzk.naver.com/live/${channel.channelId}`);
-                    chzzkModal.style.display = 'none';
-                });
-            }
+            item.style.cursor = 'pointer';
+            item.addEventListener('click', () => {
+                setSingleViewContent(`https://chzzk.naver.com/live/${channel.channelId}`);
+                chzzkModal.style.display = 'none';
+            });
             chzzkList.appendChild(item);
         });
     }
