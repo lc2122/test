@@ -6,62 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>롤캐 모바일용</title>
     <link rel="stylesheet" href="styles.css">
-    <style>
-        /* 버튼 크기 조정 */
-        .menu-button {
-            padding: 5px 10px;
-            /* 버튼 크기 줄임 */
-            font-size: 14px;
-            /* 폰트 크기 줄임 */
-            margin: 2px;
-            /* 버튼 간격 조정 */
-        }
-
-        /* 추가 스타일: 전체 레이아웃과 스크롤 방지 */
-        html,
-        body {
-            height: 100%;
-            /* html, body 높이 100% 설정 */
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            /* body 스크롤 방지 */
-        }
-
-        .container {
-            display: flex;
-            flex-direction: column;
-            /* 모바일에서는 세로 배치 */
-            height: 100%;
-            /* container 높이 100% 설정 */
-            overflow: hidden;
-        }
-
-        /* 멀티뷰 스타일 */
-        .multiview-container {
-            display: grid;
-            gap: 0;
-            width: 100%;
-            height: 100%;
-        }
-
-        .multiview-item {
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
-
-        .multiview-item iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
 </head>
 
 <body>
+    <div id="sidebar">
+        <h3>숙제 채널</h3>
+        <div id="lck-channels"></div>
+        <h4>스트리머 채널</h4>
+        <div id="chzzk-channels"></div>
+        <h4>스포티비 채널</h4>
+        <div id="spotv-channels"></div>
+        <h4>야구 채널</h4>
+        <div id="baseball-channels"></div>
+        <h4>TV 채널</h4>
+        <div id="tv-channels"></div>
+    </div>
     <div class="container">
-        <!-- 상단: 버튼 메뉴 -->
         <div class="menu-section" id="menu-section">
             <button id="hrm-btn" class="menu-button">흐름</button>
             <button id="youtube-btn" class="menu-button">숙제</button>
@@ -70,18 +31,14 @@
             <button id="favorite-btn" class="menu-button">즐찾</button>
             <button id="refresh-btn" class="menu-button">F5</button>
             <button id="input-btn" class="menu-button">입력</button>
-            <button id="list-btn" class="menu-button">리스트</button> <!-- 치지직 대신 리스트 버튼 -->
         </div>
-
-        <!-- 중간: 영상 표시 -->
         <div class="video-section" id="video-section">
             <iframe id="video-iframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         </div>
-
-        <!-- 하단: 채팅창 -->
         <div class="chat-section">
             <iframe id="chat-iframe" src="" frameborder="0"></iframe>
         </div>
+        <button id="toggle-btn" onclick="toggleSidebar()">☰</button>
     </div>
 
     <!-- 입력 모달 -->
@@ -104,15 +61,10 @@
                         <option value="4">4분할</option>
                     </select>
                 </div>
-                <div id="multiview-url-inputs">
-                    <!-- 동적으로 URL 입력 필드가 추가됩니다 -->
-                </div>
-                <!-- 추가: 즐겨찾기 목록 (멀티뷰용, 드래그 가능) -->
+                <div id="multiview-url-inputs"></div>
                 <div id="favorite-drag-container">
                     <p class="favorite-drag-title">즐겨찾기 (드래그하여 입력 필드에 붙여넣기)</p>
-                    <div id="favorite-drag-list">
-                        <!-- 즐겨찾기 항목이 여기에 동적으로 추가됩니다 -->
-                    </div>
+                    <div id="favorite-drag-list"></div>
                 </div>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -125,7 +77,7 @@
         </div>
     </div>
 
-    <!-- 기존 즐겨찾기 모달 (독립적으로 동작) -->
+    <!-- 기존 즐겨찾기 모달 -->
     <div id="favorite-modal" style="display: none;">
         <div style="display: flex; flex-direction: column; align-items: center;">
             <h3>즐겨찾기 목록</h3>
@@ -135,63 +87,126 @@
             </div>
             <button id="add-favorite-btn" class="menu-button">추가</button>
         </div>
-        <ul id="favorite-list" style="list-style-type: none; padding: 0; width: 100%;">
-            <!-- 즐겨찾기 항목이 여기에 동적으로 추가됩니다 -->
-        </ul>
+        <ul id="favorite-list" style="list-style-type: none; padding: 0; width: 100%;"></ul>
         <div class="button-container">
             <button id="close-favorite-modal" class="menu-button" style="background-color: #dc3545; color: white;">닫기</button>
         </div>
     </div>
 
-<!-- 리스트 모달 -->
-    <div id="list-modal" style="display: none;">
-        <div style="display: flex; flex-direction: column; align-items: center;">
-            <h3>스트리밍 리스트</h3>
-            <div id="list-content" style="max-height: 300px; overflow-y: auto; width: 100%;">
-                <!-- 동적으로 스트리밍 목록 추가 -->
-            </div>
-            <div class="button-container">
-                <button id="close-list-modal" class="menu-button" style="background-color: #dc3545; color: white;">닫기</button>
-            </div>
-        </div>
-    </div>
-    
     <script>
+        // 채널 데이터 정의
+        const extensionId = 'eakdijdofmnclopcffkkgmndadhbjgka';
+        const baseballBaseUrl = 'https://global-media.sooplive.com/live/soopbaseball';
+        const chzzkProxyBaseUrl = 'https://chzzk-api-proxy.hibiya.workers.dev/m3u8-redirect/';
+
+        const baseballChannels = Array.from({ length: 5 }, (_, i) => ({
+            name: `야${i + 1}`,
+            url: `${baseballBaseUrl}${i + 1}/master.m3u8`
+        }));
+
+        const spotvChannels = Array.from({ length: 40 }, (_, i) => {
+            const channelNum = String(i + 1).padStart(2, '0');
+            return {
+                name: `${i + 1}`,
+                url: `https://ch${channelNum}-nlivecdn.spotvnow.co.kr/ch${channelNum}/decr/medialist_14173921312004482655_hls.m3u8`
+            };
+        });
+
+        const lckChannels = [
+            { name: 'L', url: 'https://global-media.sooplive.com/live/lckkr/master.m3u8', type: 'm3u8', tooltip: 'soop' },
+            { name: 'C', url: 'https://chzzk-api-proxy.hibiya.workers.dev/m3u8-redirect/9381e7d6816e6d915a44a13c0195b202', type: 'm3u8', tooltip: 'chzzk' },
+            { name: 'K', url: 'https://www.youtube.com/embed/live_stream?channel=UCw1DsweY9b2AKGjV4kGJP1A', type: 'iframe', tooltip: 'youtube' }
+        ];
+
+        const chzzkChannels = [
+            { name: '풍', id: '7ce8032370ac5121dcabce7bad375ced' },
+            { name: '침', id: 'bb382c2c0cc9fa7c86ab3b037fb5799c' },
+            { name: '추', id: '181a3baebe508d3b5fa5d9fe4d6b5241' },
+            { name: '솝', id: '34a2bd4f5988e37693e94306f0bfe57f' },
+            { name: '센', id: 'be243c7cbfb8d4e28777eedc43e28181' }
+        ];
+
+        const tvChannels = [
+            { name: 'K1', url: 'https://stream.ogtv3.com/live/live1004.m3u8' },
+            { name: 'K2', url: 'https://stream.ogtv3.com/live/live1005.m3u8' },
+            { name: 'M', url: 'https://stream.ogtv3.com/live/live1003.m3u8' },
+            { name: 'S', url: 'https://stream.ogtv3.com/live/live1006.m3u8' }
+        ];
+
+        // DOM 요소
+        const baseballChannelList = document.getElementById('baseball-channels');
+        const lckChannelList = document.getElementById('lck-channels');
+        const chzzkChannelList = document.getElementById('chzzk-channels');
+        const spotvChannelList = document.getElementById('spotv-channels');
+        const tvChannelList = document.getElementById('tv-channels');
+        const videoIframe = document.getElementById('video-iframe');
+        let clickIndex = 0;
+
+        // 채널 버튼 생성 함수
+        function createChannelButton(channel, className, urlKey, typeKey) {
+            const btn = document.createElement('div');
+            btn.className = className;
+            btn.draggable = true;
+            btn.textContent = channel.name;
+            btn.dataset.url = channel[urlKey];
+            if (channel.tooltip) btn.title = channel.tooltip;
+            if (typeKey) btn.dataset.type = channel[typeKey];
+            btn.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', channel[urlKey]);
+                if (typeKey) e.dataTransfer.setData('text/type', channel[typeKey]);
+            });
+            btn.addEventListener('click', () => {
+                const url = typeKey === 'id' ? `${chzzkProxyBaseUrl}${channel[urlKey]}` : channel[urlKey];
+                const type = typeKey === 'id' ? 'm3u8' : (channel[typeKey] || 'm3u8');
+                loadPlayer(url, type);
+                clickIndex++;
+            });
+            return btn;
+        }
+
+        // 채널 목록 생성
+        lckChannels.forEach(channel => lckChannelList.appendChild(createChannelButton(channel, 'lck-btn', 'url', 'type')));
+        chzzkChannels.forEach(channel => chzzkChannelList.appendChild(createChannelButton(channel, 'chzzk-btn', 'id')));
+        spotvChannels.forEach(channel => spotvChannelList.appendChild(createChannelButton(channel, 'small-channel-btn', 'url')));
+        baseballChannels.forEach(channel => baseballChannelList.appendChild(createChannelButton(channel, 'baseball-btn', 'url')));
+        tvChannels.forEach(channel => tvChannelList.appendChild(createChannelButton(channel, 'tv-btn', 'url')));
+
+        // 플레이어 로드 함수
+        function loadPlayer(url, type) {
+            if (type === 'm3u8') {
+                videoIframe.src = `chrome-extension://${extensionId}/player.html#${url}`;
+            } else {
+                videoIframe.src = url;
+            }
+        }
+
+        // 기존 레이아웃 함수
         function getVideoarea(w, h, wr, hr) {
             h = h - 25;
-            if (w <= 0 || h <= 0) {
-                return 0;
-            } else if (w * hr > h * wr) {
-                return h * h * wr / hr;
-            } else {
-                return w * w * hr / wr;
-            }
+            if (w <= 0 || h <= 0) return 0;
+            return (w * hr > h * wr) ? h * h * wr / hr : w * w * hr / wr;
         }
 
         function getUtility(x, n) {
             return x / (x + n);
         }
 
-        // 디바운스 함수
         function debounce(func, delay) {
             let timeoutId;
-            return function(...args) {
+            return function (...args) {
                 clearTimeout(timeoutId);
-                timeoutId = setTimeout(() => {
-                    func.apply(this, args);
-                }, delay);
+                timeoutId = setTimeout(() => func.apply(this, args), delay);
             };
         }
 
         function adjustChatSectionHeight() {
             const menuSection = document.getElementById('menu-section');
             const chatSection = document.querySelector('.chat-section');
-
             if (chatSection && menuSection) {
                 chatSection.style.height = `calc(100% - ${menuSection.offsetHeight}px)`;
             }
         }
-        // 레이아웃 조정 함수 (수정됨)
+
         function design() {
             var win = window;
             var doc = document;
@@ -200,22 +215,22 @@
             var w = win.innerWidth || docElem.clientWidth || body.clientWidth;
             var h = win.innerHeight || docElem.clientHeight || body.clientHeight;
 
-            // 최소 채팅 높이 계산 추가
-            var minChatHeight = h * 0.4; // 채팅 섹션 최소 높이 40%
-            var maxVideoHeight = h - minChatHeight - 50; // 비디오 섹션 최대 높이
-            var standardHeight = w * 9 / 16 + 25; // 기존 16:9 비율 계산
-
-            // hgh 수정
+            var minChatHeight = h * 0.4;
+            var maxVideoHeight = h - minChatHeight - 50;
+            var standardHeight = w * 9 / 16 + 25;
             var hgh = standardHeight > maxVideoHeight ? maxVideoHeight : standardHeight;
 
             var wg = getUtility(getVideoarea(w - 320, h, 16, 9), 192 * 108 * 10) + getUtility(240 * h, 24 * 20 * 10);
             var hg = getUtility(getVideoarea(w, hgh, 16, 9), 192 * 108 * 10) + getUtility((w > 240 ? 240 : w) * (h - hgh), 24 * 20 * 10);
 
+            const sidebar = document.getElementById('sidebar');
             const menuSection = document.getElementById('menu-section');
             const videoSection = document.getElementById('video-section');
             const chatSection = document.querySelector('.chat-section');
-            const videoIframe = document.getElementById('video-iframe');
-            const chatIframe = document.getElementById('chat-iframe');
+            const container = document.querySelector('.container');
+
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            container.style.marginLeft = isCollapsed ? '0' : '250px';
 
             if (hg > wg) {
                 // 모바일: 상하 레이아웃
@@ -233,9 +248,8 @@
                 chatSection.style.width = "100%";
                 chatSection.style.height = (h - hgh - 350) + "px";
                 chatSection.style.position = "relative";
-
             } else {
-                // PC: 좌우 레이아웃 (수정)
+                // PC: 좌우 레이아웃
                 const pcContainer = document.createElement('div');
                 pcContainer.style.display = 'flex';
                 pcContainer.style.height = '100%';
@@ -243,7 +257,7 @@
 
                 const rightContainer = document.createElement('div');
                 rightContainer.style.width = '17.5%';
-                rightContainer.style.minWidth = '320px'; // 최소 너비 320px 설정
+                rightContainer.style.minWidth = '320px';
                 rightContainer.style.height = '100%';
                 rightContainer.style.float = 'right';
 
@@ -258,15 +272,12 @@
                 chatSection.style.width = "100%";
                 chatSection.style.height = "calc(100% - " + menuSection.offsetHeight + "px)";
                 chatSection.style.position = "relative";
-                chatSection.style.top = "0";
 
                 rightContainer.appendChild(menuSection);
                 rightContainer.appendChild(chatSection);
-
                 pcContainer.appendChild(videoSection);
                 pcContainer.appendChild(rightContainer);
 
-                const container = document.querySelector('.container');
                 container.innerHTML = '';
                 container.appendChild(pcContainer);
 
@@ -275,13 +286,16 @@
                 videoSection.style.position = "relative";
                 videoSection.style.float = "left";
             }
-            // 리사이즈 이벤트 리스너 추가
-            window.addEventListener('resize', adjustChatSectionHeight);
-            adjustChatSectionHeight(); // 초기 설정 시 한 번 실행
+            adjustChatSectionHeight();
         }
 
-        // 초기 로드 시 실행
-        window.onload = function() {
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+            design();
+        }
+
+        window.onload = function () {
             const chatIframe = document.getElementById('chat-iframe');
             const lgicurl = 'https://insagirl-toto.appspot.com/chatting/lgic/';
             if (location.hash && location.hash.substring(1)) {
@@ -289,17 +303,16 @@
             } else {
                 chatIframe.src = lgicurl;
             }
-            design(); // 초기 레이아웃 설정
+            design();
+            window.addEventListener('resize', debounce(design, 100));
         };
 
-        // "흐름" 버튼 클릭 이벤트 추가
         const hrmBtn = document.getElementById('hrm-btn');
         hrmBtn.addEventListener('click', () => {
             const url = 'https://insagirl-toto.appspot.com/hrm/?where=1';
             window.open(url, '_blank');
         });
 
-        // F5 버튼 클릭 시 채팅창 새로고침 (해시 유지)
         const refreshBtn = document.getElementById('refresh-btn');
         refreshBtn.addEventListener('click', () => {
             const chatIframe = document.getElementById('chat-iframe');
