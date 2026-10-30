@@ -1,0 +1,2238 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>태스크바 히어로: 무협펑크 (NEON GATE) 1차 프로토타입</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --neon-cyan: #00f3ff;
+      --neon-purple: #d946ef;
+      --neon-emerald: #10b981;
+      --neon-amber: #f59e0b;
+    }
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #030408;
+      background-image:
+        radial-gradient(circle at 50% 35%, rgba(0, 243, 255, 0.06) 0%, transparent 60%),
+        radial-gradient(circle at 50% 85%, rgba(217, 70, 239, 0.05) 0%, transparent 50%);
+      color: #e2e8f0;
+      font-family: 'Noto Sans KR', 'Inter', sans-serif;
+      overflow: hidden;
+    }
+    .retro-window-frame {
+      background: linear-gradient(180deg, #0d1322 0%, #070a12 100%);
+      border: 1.5px solid rgba(0, 243, 255, 0.45);
+      box-shadow:
+        0 18px 50px rgba(0, 0, 0, 0.92),
+        0 0 22px rgba(0, 243, 255, 0.16),
+        inset 0 0 0 1px rgba(217, 70, 239, 0.2);
+    }
+    .retro-inner-box {
+      background: linear-gradient(180deg, #0b101d 0%, #070b14 100%);
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.8);
+    }
+    .cyber-hud-card {
+      background: linear-gradient(135deg, rgba(6, 11, 23, 0.9) 0%, rgba(15, 23, 42, 0.82) 100%);
+      border: 1px solid rgba(0, 243, 255, 0.45);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7), inset 0 0 8px rgba(0, 243, 255, 0.1);
+    }
+    .cyber-hud-card-pink {
+      background: linear-gradient(135deg, rgba(18, 7, 26, 0.9) 0%, rgba(30, 12, 43, 0.84) 100%);
+      border: 1px solid rgba(232, 121, 249, 0.55);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7), inset 0 0 8px rgba(217, 70, 239, 0.14);
+    }
+    .hex-node {
+      clip-path: polygon(25% 4%, 75% 4%, 98% 50%, 75% 96%, 25% 96%, 2% 50%);
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #090d16;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 2px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #00f3ff;
+    }
+    @keyframes pulseRing {
+      0%, 100% { transform: scale(1); opacity: 0.95; }
+      50% { transform: scale(1.25); opacity: 0.4; }
+    }
+    .map-target-ring {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: pulseRing 1.5s infinite ease-in-out;
+    }
+    @keyframes flowDash {
+      to { stroke-dashoffset: -28; }
+    }
+    .neon-flow-line {
+      animation: flowDash 1.1s linear infinite;
+    }
+    @keyframes bossFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-3.5px); }
+    }
+    .boss-diamond-float {
+      animation: bossFloat 2.2s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="h-screen w-screen flex flex-col justify-between bg-[#030408] relative">
+
+  <!-- 숨겨진 고해상도 아트 에셋 프리로드 (캔버스 드로잉 및 월드맵 배경용) -->
+  <div class="hidden">
+    <img id="imgMapAct1" src="assets/map_act1_clean.jpg" alt="1막 네온 성문 배경" />
+    <img id="imgMapAct2" src="assets/map_act2_clean.jpg" alt="2막 전뇌 사찰 배경" />
+    <img id="imgBgNeonGate" src="assets/bg_neon_gate.jpg" alt="네온 성문 전투 배경" />
+    <img id="imgHeroAction" src="assets/hero_action_art.jpg" alt="협객 액션 컨셉아트" />
+  </div>
+
+  <!-- 우측 상단 미니 안내 -->
+  <div id="desktopWallpaperHint" class="fixed top-3 right-3 z-0 pointer-events-none select-none opacity-80 hidden lg:block">
+    <div class="cyber-hud-card rounded-lg px-3 py-2 text-[11px] text-slate-300 max-w-xs">
+      <div class="text-cyan-300 font-bold mb-0.5 flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+        <span>고해상도 아트워크 & UI 디자인 업그레이드</span>
+      </div>
+      컨셉아트의 지저분한 AI 글자와 잘못된 번호를 깨끗이 제거한 <span class="text-fuchsia-300 font-semibold">3D 무협펑크 실사풍 배경</span> 위에 <span class="text-cyan-300 font-mono">1-1~1-10</span>, <span class="text-cyan-300 font-mono">2-1~2-10</span> 인터랙티브 네온 노드를 정밀 배치했습니다.
+    </div>
+  </div>
+
+  <!-- ================= [상단 1단] 세로형 컴팩트 팝업 윈도우 ================= -->
+  <div id="gameWindow" class="flex-1 flex items-center justify-center px-2 pt-1.5 pb-1 overflow-hidden z-10">
+    <div id="topManagementPanel" class="w-full max-w-[485px] flex flex-col transition-all duration-200">
+      
+      <!-- 1-A. 팝업창 최상단 외부 재화 바 & 우측 유틸 아이콘 바 -->
+      <div class="flex items-center justify-between gap-1 mb-1 px-0.5">
+        <div class="flex items-center gap-1.5 bg-[#0a0f1d] border border-amber-400/60 rounded-md px-2.5 py-1 shadow-[0_0_10px_rgba(245,158,11,0.15)]">
+          <span class="w-4 h-4 rounded-full bg-gradient-to-br from-amber-300 to-amber-600 text-black font-black text-[10px] flex items-center justify-center shadow">₵</span>
+          <strong id="creditText" class="text-amber-300 font-mono text-xs tracking-tight">250</strong>
+          <span class="text-slate-700">|</span>
+          <span class="text-emerald-400 text-[11px]">◈</span>
+          <strong id="elixirText" class="text-emerald-300 font-mono text-xs">15</strong>
+          <span class="text-slate-700">|</span>
+          <span class="text-fuchsia-400 text-[10px]">🎴</span>
+          <span id="ticketLabelText" class="hidden">성문 혈패</span>
+          <strong id="ticketCountText" class="text-fuchsia-300 font-mono text-xs">1</strong>
+          <span class="text-[10px] text-slate-400 font-mono">(<span id="shardCountText">4</span>/20)</span>
+        </div>
+
+        <div class="flex items-center gap-1 bg-[#0a0f1d] border border-cyan-500/35 rounded-md px-1.5 py-1">
+          <button id="btnSpeedToggle" class="px-1.5 py-0.5 rounded bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-cyan-500/30 font-mono text-[10px] font-bold" title="배속 전환">
+            1x 배속
+          </button>
+          <button id="btnSoundToggle" class="px-1.5 py-0.5 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-[10px]" title="효과음 켜기/끄기">
+            🔇 음소거
+          </button>
+          <button id="btnOfflineReward" class="px-1.5 py-0.5 rounded bg-indigo-950/90 hover:bg-indigo-800 text-indigo-200 border border-indigo-400/40 text-[10px] font-bold flex items-center gap-0.5" title="폐관수련 오프라인 보상">
+            <span>🧘 폐관수련</span>
+            <span id="offlineTimerBadge" class="hidden">+보상</span>
+          </button>
+          <button id="btnDemoSupply" class="px-1.5 py-0.5 rounded bg-amber-950/90 hover:bg-amber-800 text-amber-200 border border-amber-400/50 text-[10px] font-bold" title="테스트 지원금">
+            🎁 테스트 지원금(+1,000₵ / 혈패+1)
+          </button>
+        </div>
+      </div>
+
+      <!-- 1-B. 세로형 메인 팝업 프레임 본체 -->
+      <div class="retro-window-frame rounded-xl p-2 flex flex-col gap-1.5">
+        
+        <!-- 팝업 헤더 배너 -->
+        <div class="flex items-center justify-between bg-gradient-to-r from-[#070b14] via-[#0f172a] to-[#070b14] border border-cyan-500/35 rounded-lg px-2.5 py-1">
+          <div class="flex items-center gap-1.5">
+            <div id="realmBadge" class="px-2 py-0.5 rounded bg-gradient-to-r from-fuchsia-950 to-rose-950 border border-fuchsia-400/50 text-[10px] font-bold text-fuchsia-200 shadow-sm">
+              <span id="realmNameText">입문 (1성)</span>
+            </div>
+            <span id="combatPowerBadge" class="text-[10px] text-slate-300 font-mono">
+              전투력 <strong id="partyPowerText" class="text-amber-300">125</strong>
+            </span>
+          </div>
+
+          <!-- 중앙 현판 타이틀 -->
+          <div id="windowHeaderTitle" class="px-4 py-0.5 bg-gradient-to-r from-cyan-950 via-slate-900 to-fuchsia-950 border border-cyan-400/60 rounded shadow-[0_0_12px_rgba(0,243,255,0.2)] text-xs font-black tracking-widest text-cyan-200">
+            PORTAL · 출정 지도
+          </div>
+
+          <!-- 우측: 구역 선택(호환 유지) & 월드맵 토글 & 창 닫기(✕) -->
+          <div class="flex items-center gap-1">
+            <select id="stageSelect" class="hidden bg-slate-900 text-cyan-300 border border-slate-700 rounded px-1 py-0.5 font-bold text-[10px]">
+              <option value="1-1">1-1 검문소</option>
+              <option value="1-2">1-2 사이버의원</option>
+              <option value="1-3">1-3 외성교차로</option>
+              <option value="1-4">1-4 드론터미널</option>
+              <option value="1-5">1-5 네온시장</option>
+              <option value="1-6">1-6 철기공방</option>
+              <option value="1-7">1-7 무림산업지부</option>
+              <option value="1-8">1-8 문파초소</option>
+              <option value="1-9">1-9 성문광장</option>
+              <option value="1-10">1-10 도철(보스)</option>
+              <option value="2-1">2-1 사찰입구</option>
+              <option value="2-2">2-2 좌선승려대</option>
+              <option value="2-3">2-3 케이블회랑</option>
+              <option value="2-4">2-4 호법신장석대</option>
+              <option value="2-5">2-5 북측전망탑</option>
+              <option value="2-6">2-6 심층서버교</option>
+              <option value="2-7">2-7 광학장경각</option>
+              <option value="2-8">2-8 홀로그램법당</option>
+              <option value="2-9">2-9 다보탑광장</option>
+              <option value="2-10">2-10 무심(보스)</option>
+            </select>
+            <button id="btnQuickMapTop" class="px-2 py-0.5 rounded bg-cyan-950 hover:bg-cyan-800 border border-cyan-400/50 text-cyan-200 text-[10px] font-bold transition" title="포털 월드맵 탭 열기">
+              🌀포털맵
+            </button>
+            <button id="btnClosePopupTop" class="w-5 h-5 rounded bg-rose-950 hover:bg-rose-700 border border-rose-400/50 text-rose-200 font-bold text-xs flex items-center justify-center leading-none transition" title="관리창 접기">
+              ✕
+            </button>
+          </div>
+        </div>
+
+        <!-- 1-C. 상단 고정 캐릭터 인스펙터 카드 (컨셉아트 일러스트 초상화 적용) -->
+        <div id="heroInspectorBox" class="hidden retro-inner-box rounded-lg p-2 grid grid-cols-12 gap-2 items-center">
+          <div class="col-span-4 flex flex-col bg-[#0c1220] border border-cyan-500/35 rounded-md p-1.5">
+            <div class="relative w-full h-[80px] bg-[#050811] border border-slate-800 rounded overflow-hidden flex items-center justify-center">
+              <canvas id="portraitCanvas" width="120" height="80" class="w-full h-full block"></canvas>
+              <span id="inspectorRoleBadge" class="absolute bottom-1 right-1 px-1.5 py-0.2 rounded bg-black/85 text-[9px] font-bold text-cyan-300 border border-cyan-500/50">
+                중열 / 단일딜
+              </span>
+            </div>
+            <p id="inspectorDescText" class="text-[10px] text-slate-300 leading-tight mt-1.5 line-clamp-2 min-h-[26px]">
+              데이터 칩을 박은 진동검으로 보스를 베는 검객
+            </p>
+          </div>
+
+          <div class="col-span-4 flex flex-col items-center justify-between h-full py-0.5">
+            <div class="text-[11px] font-extrabold text-amber-200 tracking-tight" id="inspectorNameTitle">묵 (검귀)</div>
+            <div class="w-full bg-[#0e1526] border border-slate-700/80 rounded px-2 py-1.5 flex flex-col items-center">
+              <div id="inspectorMiniAvatar" class="text-xs font-black text-cyan-300 py-1">⚔️ [묵] 출전중</div>
+              <div class="text-[10px] font-mono text-white" id="inspectorLvText">수련 Lv.4</div>
+              <div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden mt-0.5 border border-slate-800">
+                <div id="inspectorExpBar" class="bg-gradient-to-r from-cyan-400 to-fuchsia-400 h-full w-2/3"></div>
+              </div>
+            </div>
+            <div id="inspectorActive3Slots" class="grid grid-cols-3 gap-1 w-full mt-1.5"></div>
+          </div>
+
+          <div class="col-span-4 grid grid-cols-2 gap-1.5 place-items-center bg-[#0c1220] border border-slate-700/80 rounded-md p-1.5">
+            <button id="hexNode1" class="hex-node w-12 h-12 bg-slate-900 hover:bg-cyan-950 border border-cyan-500/50 flex flex-col items-center justify-center text-[9px] transition" title="클릭하여 진동검 출력(공격력) 수련">
+              <span class="text-cyan-300 font-bold">⚔️검기</span>
+              <span id="hexLv1" class="text-white font-mono text-[9px]">1/10</span>
+            </button>
+            <button id="hexNode2" class="hex-node w-12 h-12 bg-slate-900 hover:bg-emerald-950 border border-emerald-500/50 flex flex-col items-center justify-center text-[9px] transition" title="클릭하여 외골격 강도(체력) 수련">
+              <span class="text-emerald-300 font-bold">🛡️외골</span>
+              <span id="hexLv2" class="text-white font-mono text-[9px]">1/10</span>
+            </button>
+            <button id="hexNode3" class="hex-node w-12 h-12 bg-slate-900 hover:bg-fuchsia-950 border border-fuchsia-500/50 flex flex-col items-center justify-center text-[9px] transition" title="클릭하여 신경망 조준(치명) 수련">
+              <span class="text-fuchsia-300 font-bold">🎯조준</span>
+              <span id="hexLv3" class="text-white font-mono text-[9px]">1/10</span>
+            </button>
+            <button id="hexNode4" class="hex-node w-12 h-12 bg-slate-900 hover:bg-amber-950 border border-amber-500/50 flex flex-col items-center justify-center text-[9px] transition" title="클릭하여 단전 코어(내공) 수련">
+              <span class="text-amber-300 font-bold">🔋단전</span>
+              <span id="hexLv4" class="text-white font-mono text-[9px]">1/10</span>
+            </button>
+            <button id="hexNode5" class="hex-node w-12 h-12 bg-slate-900 hover:bg-indigo-950 border border-indigo-500/50 flex flex-col items-center justify-center text-[9px] transition" title="클릭하여 선택 협객 고유 무공 강화">
+              <span class="text-indigo-300 font-bold">⚡무공</span>
+              <span id="hexLv5" class="text-white font-mono text-[9px]">1/5</span>
+            </button>
+            <button id="hexNode6" class="hex-node w-12 h-12 bg-slate-900 hover:bg-rose-950 border border-rose-500/50 flex flex-col items-center justify-center text-[9px] transition" title="클릭하여 경지 돌파 시도">
+              <span class="text-rose-300 font-bold">🌌돌파</span>
+              <span id="hexLv6" class="text-white font-mono text-[9px]">1성</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 1-D. 중단 가변 컨텐츠 박스 -->
+        <div id="tabContentContainer" class="retro-inner-box rounded-lg p-1.5 h-[305px] overflow-y-auto custom-scroll transition-all duration-150">
+          
+          <!-- [탭 4: 동료편성] -->
+          <div id="tab-party" class="tab-pane hidden flex flex-col justify-between h-full gap-1.5">
+            <div class="flex items-center gap-2 bg-[#0c1220] border border-slate-800 rounded p-1.5">
+              <div class="w-20 shrink-0 px-2 py-1 rounded bg-rose-950/90 border border-rose-500/40 text-center">
+                <div class="text-[10px] font-bold text-rose-200">Character</div>
+                <div class="text-[9px] text-slate-400">협객 편성</div>
+              </div>
+              <div id="partyRosterContainer" class="grid grid-cols-4 gap-1.5 flex-1"></div>
+            </div>
+
+            <div class="flex items-center gap-2 bg-[#0c1220] border border-slate-800 rounded p-1.5">
+              <div class="w-20 shrink-0 px-2 py-1 rounded bg-teal-950/90 border border-teal-500/40 text-center">
+                <div class="text-[10px] font-bold text-teal-200">Support</div>
+                <div class="text-[9px] text-slate-400">약방·시너지</div>
+              </div>
+              <div class="flex-1 flex flex-col justify-between text-[10px] gap-1">
+                <div class="flex items-center justify-between">
+                  <span id="synergyTitleBadge" class="font-bold text-fuchsia-300">기본 파밍형 (강산+묵+란)</span>
+                  <span id="campStatusBadge" class="px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-300 text-[9px]">정비 가능</span>
+                </div>
+                <p id="synergyDescText" class="text-[10px] text-slate-400 truncate">
+                  강산 도발 + 란 광역 감전 + 묵 치명타 마무리 조합
+                </p>
+                <div class="flex items-center justify-between pt-0.5 border-t border-slate-800">
+                  <span id="benchCharText" class="text-emerald-300 font-semibold">약방 대기: 초 (+5%)</span>
+                  <button id="btnUnlockAllChars" class="px-1.5 py-0.2 rounded bg-fuchsia-950 hover:bg-fuchsia-800 text-fuchsia-200 border border-fuchsia-500/40 text-[9px] font-bold">
+                    🔓 4인 전원 즉시 해금(테스트용)
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- [탭 2: 가방 / 장비] -->
+          <div id="tab-inventory" class="tab-pane hidden flex flex-col justify-between h-full gap-1.5">
+            <div class="flex items-center justify-between bg-[#0c1220] px-2 py-1 rounded border border-slate-800">
+              <div id="equipCharSelector" class="flex gap-1">
+                <button data-char="muk" class="equip-char-btn px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-600 text-white">묵</button>
+                <button data-char="gangsan" class="equip-char-btn px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">강산</button>
+                <button data-char="ran" class="equip-char-btn px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">란</button>
+                <button data-char="cho" class="equip-char-btn px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">초</button>
+              </div>
+              <div class="flex items-center gap-1">
+                <button id="btnUpgradeAllEquipped" class="px-1.5 py-0.5 rounded bg-cyan-950 hover:bg-cyan-800 text-cyan-200 border border-cyan-500/40 text-[10px] font-bold">장착 장비 일괄강화 (80₵)</button>
+                <button id="btnCraftGear" class="px-1.5 py-0.5 rounded bg-amber-950 hover:bg-amber-800 text-amber-200 border border-amber-500/40 text-[10px] font-bold">📦 암시장 장비 보급 (60₵)</button>
+                <button id="btnSalvageAll" class="px-1.5 py-0.5 rounded bg-emerald-950 hover:bg-emerald-800 text-emerald-200 border border-emerald-500/40 text-[10px] font-bold">♻️ 미장착 일괄분해 (+영약)</button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-12 gap-2 flex-1 overflow-hidden">
+              <div id="equippedSlotsContainer" class="col-span-5 space-y-1 text-[10px]"></div>
+              <div id="bagGridContainer" class="col-span-7 grid grid-cols-2 gap-1.5 overflow-y-auto custom-scroll pr-1"></div>
+            </div>
+          </div>
+
+          <!-- [탭 1: 수련 (경지/스탯)] -->
+          <div id="tab-training" class="tab-pane hidden flex flex-col justify-between h-full gap-1.5">
+            <div class="grid grid-cols-2 gap-1.5">
+              <div class="bg-[#0c1220] border border-slate-800 rounded p-1.5 flex items-center justify-between">
+                <div>
+                  <div class="text-[11px] font-bold text-cyan-400">⚔️ 진동검 출력 <span id="statAtkLv" class="text-[10px] text-white font-mono">Lv.1</span></div>
+                  <div class="text-[10px] text-slate-400">공격 <span id="statAtkVal" class="text-slate-200">+18</span></div>
+                </div>
+                <button id="btnUpAtk" class="px-2 py-1 rounded bg-cyan-950 hover:bg-cyan-800 border border-cyan-500/40 text-cyan-200 text-[10px] font-bold flex flex-col items-end">
+                  <span>수련 강화</span>
+                  <span id="costAtkText" class="text-[9px] text-amber-300 font-mono">30 ₵</span>
+                </button>
+              </div>
+
+              <div class="bg-[#0c1220] border border-slate-800 rounded p-1.5 flex items-center justify-between">
+                <div>
+                  <div class="text-[11px] font-bold text-emerald-400">🛡️ 외골격 강도 <span id="statHpLv" class="text-[10px] text-white font-mono">Lv.1</span></div>
+                  <div class="text-[10px] text-slate-400">체력 <span id="statHpVal" class="text-slate-200">+160</span></div>
+                </div>
+                <button id="btnUpHp" class="px-2 py-1 rounded bg-emerald-950 hover:bg-emerald-800 border border-emerald-500/40 text-emerald-200 text-[10px] font-bold flex flex-col items-end">
+                  <span>수련 강화</span>
+                  <span id="costHpText" class="text-[9px] text-amber-300 font-mono">30 ₵</span>
+                </button>
+              </div>
+
+              <div class="bg-[#0c1220] border border-slate-800 rounded p-1.5 flex items-center justify-between">
+                <div>
+                  <div class="text-[11px] font-bold text-fuchsia-400">🎯 신경망 조준 <span id="statCritLv" class="text-[10px] text-white font-mono">Lv.1</span></div>
+                  <div class="text-[10px] text-slate-400">치명 <span id="statCritVal">12%</span>/<span id="statCritDmgVal">160%</span></div>
+                </div>
+                <button id="btnUpCrit" class="px-2 py-1 rounded bg-fuchsia-950 hover:bg-fuchsia-800 border border-fuchsia-500/40 text-fuchsia-200 text-[10px] font-bold flex flex-col items-end">
+                  <span>수련 강화</span>
+                  <span id="costCritText" class="text-[9px] text-amber-300 font-mono">45 ₵</span>
+                </button>
+              </div>
+
+              <div class="bg-[#0c1220] border border-slate-800 rounded p-1.5 flex items-center justify-between">
+                <div>
+                  <div class="text-[11px] font-bold text-amber-400">🔋 단전 코어 <span id="statMpLv" class="text-[10px] text-white font-mono">Lv.1</span></div>
+                  <div class="text-[10px] text-slate-400">회복 <span id="statMpVal">+8/s</span></div>
+                </div>
+                <button id="btnUpMp" class="px-2 py-1 rounded bg-amber-950 hover:bg-amber-800 border border-amber-500/40 text-amber-200 text-[10px] font-bold flex flex-col items-end">
+                  <span>수련 강화</span>
+                  <span id="costMpText" class="text-[9px] text-amber-300 font-mono">40 ₵</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="bg-[#0c1220] border border-cyan-500/40 rounded p-1.5 flex items-center justify-between">
+              <div class="text-[10px]">
+                <span id="totalStatLvBadge" class="text-cyan-300 font-mono font-bold">총 수련 Lv.4 / 8</span>
+                <div class="text-slate-300"><span id="currentRealmTitle">현재: 입문 (1성)</span> → <span id="nextRealmTitle" class="text-fuchsia-300 font-bold">삼류 (2성)</span></div>
+              </div>
+              <button id="btnBreakthrough" class="px-3 py-1.5 rounded bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white font-bold text-[11px] flex items-center gap-1.5">
+                <span>⚡ 경지 돌파 시도</span>
+                <span id="breakthroughCostText" class="text-[10px] bg-black/40 px-1.5 py-0.2 rounded font-mono">나노 영약 10◈</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- [탭 3: 스킬 (무공/리더)] -->
+          <div id="tab-skills" class="tab-pane hidden grid grid-cols-2 gap-1.5 h-full overflow-y-auto custom-scroll"></div>
+
+          <!-- [탭 5: 고해상도 3D 무협펑크 네온 월드맵 (클린 배경 아트워크 + 정밀 인터랙티브 노드 오버레이)] -->
+          <div id="tab-map" class="tab-pane flex flex-col justify-between h-full gap-1">
+            
+            <!-- 컨셉아트 스타일 상단 HUD 바 -->
+            <div class="cyber-hud-card rounded-md px-2.5 py-1 flex items-center justify-between">
+              <div class="flex items-center gap-1">
+                <span class="text-cyan-400 font-mono text-xs font-black">⌜</span>
+                <span id="mapBannerActTitle" class="text-xs font-black tracking-tight text-cyan-200" style="text-shadow:0 0 10px rgba(0,243,255,0.8);">1막 네온 성문</span>
+                <span class="text-cyan-400 font-mono text-xs font-black">⌟</span>
+              </div>
+
+              <!-- 중앙: 컨셉아트 스타일 1막 / 2막 네온 캡슐 탭 -->
+              <div class="flex items-center gap-1">
+                <button data-map-act="1" class="map-act-btn px-2.5 py-0.5 rounded-full bg-fuchsia-950/90 text-fuchsia-100 border-2 border-fuchsia-400 text-[10px] font-extrabold shadow-[0_0_12px_rgba(217,70,239,0.65)] transition">제1막: 네온 성문</button>
+                <button data-map-act="2" class="map-act-btn px-2.5 py-0.5 rounded-full bg-slate-900/90 text-cyan-300/80 hover:text-cyan-100 border border-cyan-500/40 text-[10px] font-bold transition">제2막: 전뇌 사찰</button>
+                <button data-map-act="3" class="map-act-btn px-2 py-0.5 rounded-full bg-slate-950 text-slate-600 border border-slate-800 text-[9px] font-bold">🔒 제3막 (예고)</button>
+              </div>
+
+              <!-- 우측: 탐사도 & 혈패/열쇠 상태 -->
+              <div class="text-right leading-tight">
+                <div class="text-[10px] font-extrabold text-cyan-300 font-mono" id="mapExplorePctText">탐사도 10%</div>
+                <div class="text-[9px] text-fuchsia-300 font-mono" id="mapTicketInfoText">🎴혈패 1장(4/20)</div>
+              </div>
+            </div>
+
+            <!-- 중앙 3D 일러스트 기반 인터랙티브 네온 월드맵 뷰포트 -->
+            <div class="relative flex-1 bg-[#040710] border border-cyan-400/50 rounded-md overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.9)]">
+              <!-- 클린 3D 아트워크 배경 이미지 (1막 / 2막 전환) -->
+              <img id="mapBackgroundImg" src="assets/map_act1_clean.jpg" alt="월드맵 배경" class="absolute inset-0 w-full h-full object-cover pointer-events-none select-none brightness-95 contrast-110" />
+
+              <!-- 어두운 비네팅 & 정밀 SVG 노드/경로 오버레이 -->
+              <svg id="mapRouteSvg" viewBox="0 0 420 236" preserveAspectRatio="none" class="relative z-10 w-full h-full block select-none">
+                <!-- JS에서 3D 배경의 실제 네온 발판 위치 위에 정확히 1-1~1-10, 2-1~2-10 노드와 흐르는 광선 경로를 렌더링 -->
+              </svg>
+
+              <!-- 좌측 하단 사이버 범례 카드 (컨셉아트 좌측 하단 HUD 재현) -->
+              <div class="absolute bottom-1.5 left-1.5 z-20 cyber-hud-card rounded px-2 py-1 text-[9px] leading-tight pointer-events-none backdrop-blur-md">
+                <div class="text-cyan-300 font-extrabold mb-0.5" id="mapLegendHeader">구역: 1막 — 네온 성문 지구</div>
+                <div class="text-slate-200">◆ <span class="text-cyan-300 font-mono font-bold" id="mapLegendNormalRange">1-1 ~ 1-9</span> : 일반 스테이지</div>
+                <div class="text-slate-200">◆ <span class="text-fuchsia-400 font-mono font-bold" id="mapLegendBossRange">1-10 보스</span> : 성문 최종 보스</div>
+              </div>
+
+              <!-- 우측 하단 현재 스테이지 정보 & 즉시 출정 안내 박스 -->
+              <div class="absolute bottom-1.5 right-1.5 z-20 cyber-hud-card-pink rounded px-2 py-1 text-[9px] leading-tight backdrop-blur-md max-w-[190px]">
+                <div id="mapSelectedStageTitle" class="font-extrabold text-amber-300 truncate">현재: 1-1 성문 검문소</div>
+                <div id="mapSelectedStageMeta" class="text-slate-200 truncate mt-0.5">권장 전투력 100 · 혈패 드랍 5%</div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- 1-E. 팝업 하단 알림줄 & 5개 아이콘 독 -->
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center justify-between px-2.5 py-0.5 bg-[#060912] border border-cyan-500/30 rounded text-[10px]">
+            <span class="text-amber-400 font-bold">⚡ 무림 통신</span>
+            <span id="combatToast" class="text-cyan-300 truncate max-w-[330px]">3D 월드맵 위의 네온 거점(1-1~1-10, 2-1~2-10)을 클릭해 이동하세요!</span>
+          </div>
+
+          <div class="grid grid-cols-5 gap-1 pt-0.5">
+            <button data-tab="inventory" class="tab-btn py-1.5 px-0.5 rounded bg-[#141a29] border border-slate-700 text-slate-300 hover:text-white font-bold text-[10px] flex flex-col items-center justify-center gap-0.5 transition relative">
+              <span class="text-sm leading-none">🎒</span><span class="text-[10px] truncate max-w-full">2. 가방 (도복/코어)</span>
+              <span id="bagCountBadge" class="absolute top-0.5 right-1 px-1 rounded-full text-[8px] bg-cyan-700 text-white">3</span>
+            </button>
+            <button data-tab="training" class="tab-btn py-1.5 px-0.5 rounded bg-[#141a29] border border-slate-700 text-slate-300 hover:text-white font-bold text-[10px] flex flex-col items-center justify-center gap-0.5 transition">
+              <span class="text-sm leading-none">⚡</span><span class="text-[10px] truncate max-w-full">1. 수련 (경지/스탯)</span>
+            </button>
+            <button data-tab="party" class="tab-btn py-1.5 px-0.5 rounded bg-[#141a29] border border-slate-700 text-slate-300 hover:text-white font-bold text-[10px] flex flex-col items-center justify-center gap-0.5 transition">
+              <span class="text-sm leading-none">👥</span><span class="text-[10px] truncate max-w-full">4. 동료편성 (3인 파티)</span>
+            </button>
+            <button data-tab="skills" class="tab-btn py-1.5 px-0.5 rounded bg-[#141a29] border border-slate-700 text-slate-300 hover:text-white font-bold text-[10px] flex flex-col items-center justify-center gap-0.5 transition">
+              <span class="text-sm leading-none">🗡️</span><span class="text-[10px] truncate max-w-full">3. 스킬 (무공/리더)</span>
+            </button>
+            <button data-tab="map" id="btnTabPortalMap" class="tab-btn py-1.5 px-0.5 rounded bg-gradient-to-b from-cyan-900/70 to-fuchsia-950/70 border-2 border-cyan-400 text-cyan-100 font-bold text-[10px] flex flex-col items-center justify-center gap-0.5 transition relative shadow-[0_0_10px_rgba(0,243,255,0.3)]">
+              <span class="text-sm leading-none">🌀</span><span class="text-[10px] truncate max-w-full">5. 포털 (월드맵)</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= [하단 2단] 높이를 키우고 우측 하단 초소형 원형/아이콘 버튼만 남긴 전투창 ================= -->
+  <div class="w-full px-2 pb-1.5 shrink-0 z-20 select-none flex justify-center">
+    <div class="relative w-full max-w-[485px] h-[136px] retro-window-frame rounded-xl overflow-hidden">
+      
+      <!-- 현재 스테이지 텍스트는 화면에서 숨김 (코드 호환용 DOM 유지) -->
+      <div class="hidden">
+        <span id="stripStageName">1-1 성문 검문소</span>
+        <span id="stripWaveText">(1/5)</span>
+        <span id="stripTicketMini">1/1</span>
+      </div>
+
+      <!-- 우측 하단 코너: 레퍼런스처럼 아주 작은 원형 AUTO 토글 + 초소형 다음맵/메뉴 버튼 -->
+      <div class="absolute bottom-2 right-2 z-20 flex items-center gap-1 pointer-events-auto">
+        <button id="btnAutoSkillToggle" class="w-7 h-7 rounded-full bg-cyan-950/90 hover:bg-cyan-800 text-cyan-200 border border-cyan-400/80 text-[8px] font-black font-mono shadow-[0_0_8px_rgba(0,243,255,0.45)] flex items-center justify-center leading-none transition" title="자동 무공 ON/OFF">
+          AUTO
+        </button>
+        <button id="btnChallengeBoss" class="h-6 px-1.5 rounded bg-[#14091f]/90 hover:bg-fuchsia-950 text-fuchsia-300 border border-fuchsia-400/60 text-[8px] font-bold shadow flex items-center justify-center leading-none transition" title="다음 구역 / 보스맵 이동">
+          <span id="bossBtnSubText">다음▶</span>
+        </button>
+        <button id="btnToggleTopPanel" class="w-6 h-6 rounded bg-amber-950/95 hover:bg-amber-800 text-amber-200 border border-amber-400/70 text-[10px] font-extrabold shadow flex items-center justify-center leading-none transition" title="상단 관리창 열기/닫기">
+          <span id="toggleArrowIcon">🔽</span>
+          <span id="togglePanelText" class="hidden">메뉴</span>
+        </button>
+      </div>
+
+      <!-- 높이를 136px로 키운 전투 캔버스 -->
+      <canvas id="battleCanvas" class="w-full h-[136px] block cursor-pointer" title="클릭 시 검기 지원 사격!"></canvas>
+    </div>
+  </div>
+
+  <!-- ================= 모달: 폐관수련 (오프라인 보상 정산) ================= -->
+  <div id="offlineModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="retro-window-frame rounded-xl max-w-sm w-full p-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-2">
+        <div class="flex items-center gap-1.5">
+          <span class="text-base">🧘</span>
+          <h3 class="text-xs font-bold text-cyan-300">폐관수련 (운기조식 오프라인 정산)</h3>
+        </div>
+        <button id="btnCloseOfflineModal" class="text-slate-400 hover:text-white text-xs px-1.5">✕</button>
+      </div>
+      <div class="py-3 space-y-2 text-xs">
+        <p class="text-slate-300 text-[11px] leading-relaxed">
+          창을 닫아두는 동안에도 협객들이 단전을 회전시켜 내공과 전리품을 축적합니다.
+        </p>
+        <div class="bg-slate-950/90 border border-slate-800 rounded p-2.5 space-y-1 text-[11px]">
+          <div class="flex justify-between">
+            <span class="text-slate-400">누적 운기조식 시간:</span>
+            <strong id="modalOfflineTime" class="text-cyan-300 font-mono">15분 00초</strong>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">획득 크레딧:</span>
+            <strong id="modalOfflineCredit" class="text-amber-300 font-mono">+450 ₵</strong>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">획득 나노 영약:</span>
+            <strong id="modalOfflineElixir" class="text-emerald-300 font-mono">+6 ◈</strong>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">성문 혈패 조각:</span>
+            <strong id="modalOfflineShard" class="text-fuchsia-300 font-mono">+3 조각</strong>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end pt-1">
+        <button id="btnClaimOffline" class="w-full py-2 rounded bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-bold text-xs transition">
+          ⚡ 운기조식 보상 수령 (/v1/claim)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================================
+    // 1. 게임 기획 데이터 (3D 실사풍 월드맵 배경의 실제 네온 발판 위치에 1:1 매칭된 좌표)
+    // ============================================================================
+    const REALMS = [
+      { name: '입문 (1성)', reqLv: 0, costElixir: 0, mult: 1.0 },
+      { name: '삼류 (2성)', reqLv: 8, costElixir: 10, mult: 1.45 },
+      { name: '이류 (3성)', reqLv: 16, costElixir: 25, mult: 2.1 },
+      { name: '일류 (4성)', reqLv: 26, costElixir: 50, mult: 3.2 },
+      { name: '절정 (5성)', reqLv: 40, costElixir: 90, mult: 5.0 },
+      { name: '화경 (6성)', reqLv: 60, costElixir: 160, mult: 8.5 }
+    ];
+
+    const STAGE_ORDER = [
+      '1-1', '1-2', '1-3', '1-4', '1-5', '1-6', '1-7', '1-8', '1-9', '1-10',
+      '2-1', '2-2', '2-3', '2-4', '2-5', '2-6', '2-7', '2-8', '2-9', '2-10'
+    ];
+
+    // map_act1_clean.jpg 및 map_act2_clean.jpg의 실제 네온 브릿지 발판(Pad) 중심 좌표 (viewBox 420x236 기준)
+    const STAGES = {
+      '1-1': { act: 1, name: '1-1 성문 검문소', recPower: 100, dropRate: 0.05, isBoss: false, enemyHp: 110, enemyAtk: 10, rewardCredit: 22, mapX: 156, mapY: 218, ringCol: '#00f3ff' },
+      '1-2': { act: 1, name: '1-2 사이버 의원 앞', recPower: 135, dropRate: 0.05, isBoss: false, enemyHp: 145, enemyAtk: 13, rewardCredit: 28, mapX: 192, mapY: 193, ringCol: '#e879f9' },
+      '1-3': { act: 1, name: '1-3 외성 교차로', recPower: 175, dropRate: 0.05, isBoss: false, enemyHp: 195, enemyAtk: 16, rewardCredit: 35, mapX: 228, mapY: 166, ringCol: '#00f3ff' },
+      '1-4': { act: 1, name: '1-4 드론 터미널', recPower: 220, dropRate: 0.05, isBoss: false, enemyHp: 260, enemyAtk: 19, rewardCredit: 45, mapX: 224, mapY: 144, ringCol: '#e879f9' },
+      '1-5': { act: 1, name: '1-5 네온 시장 입구', recPower: 265, dropRate: 0.05, isBoss: false, enemyHp: 315, enemyAtk: 22, rewardCredit: 54, mapX: 198, mapY: 126, ringCol: '#00f3ff' },
+      '1-6': { act: 1, name: '1-6 철기 공방교', recPower: 310, dropRate: 0.05, isBoss: false, enemyHp: 370, enemyAtk: 25, rewardCredit: 63, mapX: 204, mapY: 111, ringCol: '#e879f9' },
+      '1-7': { act: 1, name: '1-7 무림산업 지부', recPower: 350, dropRate: 0.05, isBoss: false, enemyHp: 420, enemyAtk: 28, rewardCredit: 70, mapX: 210, mapY: 96, ringCol: '#00f3ff' },
+      '1-8': { act: 1, name: '1-8 문파 초소교', recPower: 385, dropRate: 0.05, isBoss: false, enemyHp: 470, enemyAtk: 30, rewardCredit: 78, mapX: 211, mapY: 82, ringCol: '#e879f9' },
+      '1-9': { act: 1, name: '1-9 내성 성문 광장', recPower: 420, dropRate: 0.08, isBoss: false, enemyHp: 520, enemyAtk: 32, rewardCredit: 85, mapX: 210, mapY: 68, ringCol: '#00f3ff' },
+      '1-10': { act: 1, name: '1-10 [보스] 철면 도철', recPower: 600, dropRate: 0.0, isBoss: true, enemyHp: 2600, enemyAtk: 52, rewardCredit: 400, mapX: 210, mapY: 36, ringCol: '#f43f5e' },
+
+      '2-1': { act: 2, name: '2-1 전뇌 사찰 입구', recPower: 680, dropRate: 0.05, isBoss: false, enemyHp: 720, enemyAtk: 44, rewardCredit: 120, mapX: 119, mapY: 206, ringCol: '#00f3ff' },
+      '2-2': { act: 2, name: '2-2 좌선 승려 전망대', recPower: 730, dropRate: 0.05, isBoss: false, enemyHp: 790, enemyAtk: 47, rewardCredit: 132, mapX: 74, mapY: 141, ringCol: '#00f3ff' },
+      '2-3': { act: 2, name: '2-3 데이터 협곡교', recPower: 790, dropRate: 0.05, isBoss: false, enemyHp: 860, enemyAtk: 50, rewardCredit: 144, mapX: 162, mapY: 114, ringCol: '#e879f9' },
+      '2-4': { act: 2, name: '2-4 호법신장 석대', recPower: 850, dropRate: 0.05, isBoss: false, enemyHp: 940, enemyAtk: 54, rewardCredit: 156, mapX: 154, mapY: 80, ringCol: '#00f3ff' },
+      '2-5': { act: 2, name: '2-5 북측 서버 전망탑', recPower: 910, dropRate: 0.05, isBoss: false, enemyHp: 1030, enemyAtk: 57, rewardCredit: 168, mapX: 173, mapY: 49, ringCol: '#e879f9' },
+      '2-6': { act: 2, name: '2-6 심층 회로 교량', recPower: 960, dropRate: 0.05, isBoss: false, enemyHp: 1110, enemyAtk: 60, rewardCredit: 180, mapX: 187, mapY: 65, ringCol: '#00f3ff' },
+      '2-7': { act: 2, name: '2-7 광학 장경각', recPower: 1010, dropRate: 0.05, isBoss: false, enemyHp: 1190, enemyAtk: 63, rewardCredit: 190, mapX: 199, mapY: 86, ringCol: '#e879f9' },
+      '2-8': { act: 2, name: '2-8 홀로그램 법당', recPower: 1055, dropRate: 0.05, isBoss: false, enemyHp: 1270, enemyAtk: 65, rewardCredit: 200, mapX: 222, mapY: 101, ringCol: '#00f3ff' },
+      '2-9': { act: 2, name: '2-9 다보탑 외곽 광장', recPower: 1100, dropRate: 0.08, isBoss: false, enemyHp: 1350, enemyAtk: 68, rewardCredit: 210, mapX: 250, mapY: 118, ringCol: '#e879f9' },
+      '2-10': { act: 2, name: '2-10 [보스] 방장 무심', recPower: 1500, dropRate: 0.0, isBoss: true, enemyHp: 5800, enemyAtk: 95, rewardCredit: 950, mapX: 312, mapY: 46, ringCol: '#f43f5e' }
+    };
+
+    const CHARACTERS = {
+      gangsan: {
+        id: 'gangsan',
+        name: '강산',
+        title: '철권 탱커',
+        posOrder: 1,
+        roleBadge: '전열 / 탱커',
+        bio: '외골격 철권으로 적을 도발하고 아군에 보호막을 두르는 선봉장',
+        color: '#38bdf8',
+        accent: '#f59e0b',
+        cropX: 0.50,
+        unlocked: true,
+        baseHp: 340,
+        baseAtk: 14,
+        skillName: '철벽 반격파',
+        skillDesc: '전열 도발 + 파티 보호막 생성 및 전방 충격파',
+        leaderDesc: '파티 받는 피해 20% 감소',
+        skillLv: 1
+      },
+      muk: {
+        id: 'muk',
+        name: '묵',
+        title: '검귀 딜러',
+        posOrder: 2,
+        roleBadge: '중열 / 단일딜',
+        bio: '데이터 칩을 박은 진동검으로 강력한 치명타를 꽂는 검객',
+        color: '#00f3ff',
+        accent: '#22d3ee',
+        cropX: 0.18,
+        unlocked: true,
+        baseHp: 210,
+        baseAtk: 28,
+        skillName: '연검 3연타',
+        skillDesc: '전방 적에게 320% 치명타 3연속 참격 + 흡혈',
+        leaderDesc: '파티 치명타 확률 +15%',
+        skillLv: 1
+      },
+      ran: {
+        id: 'ran',
+        name: '란',
+        title: '뇌장 기공사',
+        posOrder: 3,
+        roleBadge: '후열 / 광역딜',
+        bio: '보조 드론과 번개 장법으로 몰려오는 적들을 단숨에 청소하는 기공사',
+        color: '#d946ef',
+        accent: '#c084fc',
+        cropX: 0.72,
+        unlocked: true,
+        baseHp: 180,
+        baseAtk: 22,
+        skillName: '뇌장 확산',
+        skillDesc: '모든 적에게 210% 번개 기공탄 + 감전 부여',
+        leaderDesc: '파티 내공 회복 속도 +30%',
+        skillLv: 1
+      },
+      cho: {
+        id: 'cho',
+        name: '초',
+        title: '침술 힐러',
+        posOrder: 4,
+        roleBadge: '후열 / 힐·독공',
+        bio: '나노 침술로 아군을 지속 치료하고 적에게 맹독 디버프를 거는 의무관',
+        color: '#10b981',
+        accent: '#34d399',
+        cropX: 0.78,
+        unlocked: false,
+        baseHp: 190,
+        baseAtk: 17,
+        skillName: '나노 침술·독무',
+        skillDesc: '아군 전체 체력 회복 + 적 전체 중독/공격력 감소',
+        leaderDesc: '파티 초당 체력 지속 회복 +5%',
+        skillLv: 1
+      }
+    };
+
+    // ============================================================================
+    // 2. 런타임 상태 관리
+    // ============================================================================
+    const state = {
+      credits: 250,
+      elixirs: 15,
+      tickets: 1,
+      shards: 4,
+      realmIdx: 0,
+      currentStageId: '1-1',
+      viewingMapAct: 1,
+      activeTab: 'map',
+      wave: 1,
+      maxWave: 5,
+      gameSpeed: 1,
+      soundEnabled: false,
+      autoSkill: true,
+      topPanelCollapsed: false,
+      leaderId: 'muk',
+      activeParty: ['gangsan', 'muk', 'ran'],
+      selectedEquipChar: 'muk',
+      firstBossCleared: { '1-10': false, '2-10': false },
+
+      training: {
+        atkLv: 1,
+        hpLv: 1,
+        critLv: 1,
+        mpLv: 1
+      },
+
+      equipped: {
+        gangsan: {
+          weapon: { name: '구형 외골격 건틀릿', slot: 'weapon', lv: 1, bonus: 12 },
+          robe: { name: '경호원 방탄 도복', slot: 'robe', lv: 1, bonus: 90 },
+          core: { name: '1세대 단전 배터리', slot: 'core', lv: 1, bonus: 3 }
+        },
+        muk: {
+          weapon: { name: '청광 진동검 Mk.I', slot: 'weapon', lv: 1, bonus: 18 },
+          robe: { name: '하층 흑묵 도복', slot: 'robe', lv: 1, bonus: 65 },
+          core: { name: '초기형 단전 코어', slot: 'core', lv: 1, bonus: 4 }
+        },
+        ran: {
+          weapon: { name: '전뇌 염주 드론', slot: 'weapon', lv: 1, bonus: 15 },
+          robe: { name: '탈주 승려 법의', slot: 'robe', lv: 1, bonus: 55 },
+          core: { name: '과충전 단전 코어', slot: 'core', lv: 1, bonus: 5 }
+        },
+        cho: {
+          weapon: { name: '하수구 나노 침통', slot: 'weapon', lv: 1, bonus: 13 },
+          robe: { name: '개조 의무관 장포', slot: 'robe', lv: 1, bonus: 60 },
+          core: { name: '생체 단전 코어', slot: 'core', lv: 1, bonus: 4 }
+        }
+      },
+
+      bag: [
+        { id: 101, name: '고주파 진동검 Mk.II', slot: 'weapon', rarity: 'rare', lv: 2, bonus: 29 },
+        { id: 102, name: '네온 방호 도복', slot: 'robe', rarity: 'rare', lv: 2, bonus: 135 },
+        { id: 103, name: '2세대 초전도 단전코어', slot: 'core', rarity: 'epic', lv: 3, bonus: 8 }
+      ],
+      nextItemId: 200
+    };
+
+    // ============================================================================
+    // 3. 사운드 합성기
+    // ============================================================================
+    let audioCtx = null;
+    function playSynthSound(type) {
+      if (!state.soundEnabled) return;
+      try {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          audioCtx = new AudioContextClass();
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'slash') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(520, now);
+          osc.frequency.exponentialRampToValueAtTime(110, now + 0.08);
+          gain.gain.setValueAtTime(0.06, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+          osc.start(now);
+          osc.stop(now + 0.08);
+        } else if (type === 'skill') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(240, now);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.16);
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.16);
+          osc.start(now);
+          osc.stop(now + 0.16);
+        } else if (type === 'levelup') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.setValueAtTime(660, now + 0.07);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.18);
+          osc.start(now);
+          osc.stop(now + 0.18);
+        }
+      } catch (e) {}
+    }
+
+    // ============================================================================
+    // 4. 스탯 및 초상화 렌더링 헬퍼
+    // ============================================================================
+    function getRealmMultiplier() {
+      return REALMS[state.realmIdx].mult;
+    }
+
+    function getTotalTrainingLv() {
+      const t = state.training;
+      return t.atkLv + t.hpLv + t.critLv + t.mpLv;
+    }
+
+    function getCharStats(charId) {
+      const base = CHARACTERS[charId];
+      const eq = state.equipped[charId];
+      const mult = getRealmMultiplier();
+
+      const trainAtk = state.training.atkLv * 9;
+      const trainHp = state.training.hpLv * 85;
+      const atk = Math.round((base.baseAtk + trainAtk + eq.weapon.bonus) * mult);
+      const maxHp = Math.round((base.baseHp + trainHp + eq.robe.bonus) * mult);
+      let mpRegen = 6 + state.training.mpLv * 2 + eq.core.bonus;
+      if (state.leaderId === 'ran') mpRegen = Math.round(mpRegen * 1.3);
+
+      let critRate = Math.min(0.75, 0.10 + state.training.critLv * 0.02 + (state.leaderId === 'muk' ? 0.15 : 0));
+      let critDmg = 1.55 + state.training.critLv * 0.05;
+
+      return { atk, maxHp, mpRegen, critRate, critDmg };
+    }
+
+    function getPartyCombatPower() {
+      let sum = 0;
+      state.activeParty.forEach(cid => {
+        const s = getCharStats(cid);
+        sum += Math.round(s.atk * 3.2 + s.maxHp * 0.22 + CHARACTERS[cid].skillLv * 35);
+      });
+      return sum;
+    }
+
+    function getNextStageId() {
+      const idx = STAGE_ORDER.indexOf(state.currentStageId);
+      if (idx === -1 || idx >= STAGE_ORDER.length - 1) return STAGE_ORDER[0];
+      return STAGE_ORDER[idx + 1];
+    }
+
+    function travelToStage(targetStageId) {
+      const stg = STAGES[targetStageId];
+      if (!stg) return;
+      if (stg.isBoss) {
+        if (state.tickets < 1) {
+          showCombatToast(`⚠️ 보스 도전권(${stg.act === 1 ? '성문 혈패' : '전뇌 열쇠'})이 부족합니다! (우측 위 테스트 지원금 활용)`);
+          return;
+        }
+        state.tickets -= 1;
+      }
+      state.currentStageId = targetStageId;
+      state.viewingMapAct = stg.act;
+      document.getElementById('stageSelect').value = targetStageId;
+      state.wave = 1;
+      buildPartyEntities();
+      spawnWaveEnemies();
+      playSynthSound('levelup');
+      showCombatToast(`🌀 포털 이동 완료: [${stg.name}]`);
+      updateAllUI();
+    }
+
+    // 상단 인스펙터 초상화: 실제 전투 액션 컨셉아트를 활용해 고퀄리티 캐릭터 일러스트 출력
+    function drawHeroPortrait(charId) {
+      const pCanvas = document.getElementById('portraitCanvas');
+      if (!pCanvas) return;
+      const pCtx = pCanvas.getContext('2d');
+      const ch = CHARACTERS[charId];
+      const w = pCanvas.width;
+      const h = pCanvas.height;
+
+      pCtx.clearRect(0, 0, w, h);
+      const artImg = document.getElementById('imgHeroAction');
+      if (artImg && artImg.complete && artImg.naturalWidth > 0) {
+        const sx = Math.max(0, Math.floor(artImg.naturalWidth * ch.cropX) - 70);
+        const sw = Math.min(160, artImg.naturalWidth - sx);
+        pCtx.drawImage(artImg, sx, 10, sw, Math.floor(artImg.naturalHeight * 0.78), 0, 0, w, h);
+        // 네온 컬러 틴트 및 테두리 후광
+        pCtx.fillStyle = 'rgba(5, 9, 20, 0.25)';
+        pCtx.fillRect(0, 0, w, h);
+      } else {
+        pCtx.fillStyle = '#090d18';
+        pCtx.fillRect(0, 0, w, h);
+      }
+
+      pCtx.strokeStyle = ch.color;
+      pCtx.lineWidth = 2;
+      pCtx.strokeRect(1, 1, w - 2, h - 2);
+    }
+
+    // ============================================================================
+    // 5. 고해상도 3D 아트워크 기반 인터랙티브 월드맵 렌더링 (1막 / 2막)
+    // ============================================================================
+    function drawMapBuildingTag(x, y, text, color) {
+      const tw = text.length * 7.2 + 12;
+      return `
+        <g class="pointer-events-none">
+          <rect x="${x - tw / 2}" y="${y - 10}" width="${tw}" height="13" rx="2" fill="#040814" fill-opacity="0.86" stroke="${color}" stroke-width="1" />
+          <text x="${x}" y="${y - 1}" text-anchor="middle" fill="${color}" font-size="7.5" font-weight="800" font-family="Noto Sans KR, sans-serif">${text}</text>
+        </g>
+      `;
+    }
+
+    function renderPortalMapTab() {
+      const svg = document.getElementById('mapRouteSvg');
+      const bgImg = document.getElementById('mapBackgroundImg');
+      if (!svg || !bgImg) return;
+
+      const act = state.viewingMapAct;
+      const curStg = STAGES[state.currentStageId];
+      const actStages = Object.entries(STAGES)
+        .filter(([, v]) => v.act === act)
+        .map(([k, v]) => ({ id: k, ...v }));
+
+      // 1막 / 2막 클린 3D 아트워크 배경 이미지 전환
+      const act1Src = document.getElementById('imgMapAct1').src;
+      const act2Src = document.getElementById('imgMapAct2').src;
+      bgImg.src = act === 1 ? act1Src : act2Src;
+
+      const curStageNum = Number(state.currentStageId.split('-')[1] || 1);
+      const explorePct = state.currentStageId.startsWith(String(act)) ? (curStageNum * 10) : (act === 1 ? 100 : 10);
+
+      document.getElementById('mapBannerActTitle').textContent = act === 1 ? '1막 네온 성문' : '2막 전뇌 사찰';
+      document.getElementById('mapExplorePctText').textContent = `탐사도 ${explorePct}%`;
+      document.getElementById('mapTicketInfoText').textContent = `🎴${act === 1 ? '혈패' : '열쇠'} ${state.tickets}장(${state.shards}/20)`;
+      document.getElementById('mapLegendHeader').textContent = act === 1 ? '구역: 1막 — 네온 성문 지구' : '구역: 2막 — 전뇌 사찰 협곡';
+      document.getElementById('mapLegendNormalRange').textContent = act === 1 ? '1-1 ~ 1-9' : '2-1 ~ 2-9';
+      document.getElementById('mapLegendBossRange').textContent = act === 1 ? '1-10 보스 (도철)' : '2-10 보스 (무심)';
+
+      document.querySelectorAll('.map-act-btn').forEach(btn => {
+        const bAct = Number(btn.getAttribute('data-map-act'));
+        if (bAct === act) {
+          btn.className = bAct === 1
+            ? 'map-act-btn px-2.5 py-0.5 rounded-full bg-fuchsia-950/90 text-fuchsia-100 border-2 border-fuchsia-400 text-[10px] font-extrabold shadow-[0_0_12px_rgba(217,70,239,0.7)] transition'
+            : 'map-act-btn px-2.5 py-0.5 rounded-full bg-cyan-950/90 text-cyan-100 border-2 border-cyan-400 text-[10px] font-extrabold shadow-[0_0_12px_rgba(0,243,255,0.7)] transition';
+        } else if (bAct === 3) {
+          btn.className = 'map-act-btn px-2 py-0.5 rounded-full bg-slate-950 text-slate-600 border border-slate-800 text-[9px] font-bold';
+        } else {
+          btn.className = 'map-act-btn px-2.5 py-0.5 rounded-full bg-slate-900/90 text-slate-400 hover:text-white border border-slate-700 text-[10px] font-bold transition';
+        }
+      });
+
+      let html = `
+        <defs>
+          <linearGradient id="skyBg1"></linearGradient>
+          <linearGradient id="skyBg2"></linearGradient>
+          <linearGradient id="holoBeamGrad"></linearGradient>
+          <linearGradient id="bridgeGlowGrad" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stop-color="#00f3ff" />
+            <stop offset="55%" stop-color="#e879f9" />
+            <stop offset="100%" stop-color="#f43f5e" />
+          </linearGradient>
+          <filter id="neonGlow" x="-35%" y="-35%" width="170%" height="170%">
+            <feGaussianBlur stdDeviation="2.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+      `;
+
+      // 컨셉아트 속 주요 건물 홀로그램 지명 태그 (깨끗한 한국어 폰트로 표시)
+      if (act === 1) {
+        html += `
+          ${drawMapBuildingTag(38, 92, '네온시장', '#00f3ff')}
+          ${drawMapBuildingTag(92, 182, '사이버의원', '#00f3ff')}
+          ${drawMapBuildingTag(284, 134, '드론터미널', '#00f3ff')}
+          ${drawMapBuildingTag(365, 112, '무림산업 타워', '#e879f9')}
+          ${drawMapBuildingTag(210, 62, '네온 성문', '#67e8f9')}
+        `;
+      } else {
+        html += `
+          ${drawMapBuildingTag(68, 32, '호법신장 홀로그램', '#00f3ff')}
+          ${drawMapBuildingTag(56, 122, '좌선 승려대', '#67e8f9')}
+          ${drawMapBuildingTag(142, 186, '데이터 협곡', '#e879f9')}
+          ${drawMapBuildingTag(325, 118, '전뇌 다보탑', '#f472b6')}
+        `;
+      }
+
+      // 1->2->3->...->10 순차 진행 방향을 보여주는 네온 에너지 흐름선
+      const pointsStr = actStages.map(s => `${s.mapX},${s.mapY}`).join(' ');
+      html += `
+        <polyline points="${pointsStr}" fill="none" stroke="url(#bridgeGlowGrad)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.8" filter="url(#neonGlow)" />
+        <polyline points="${pointsStr}" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="4 8" stroke-linecap="round" stroke-linejoin="round" class="neon-flow-line" opacity="0.92" />
+      `;
+
+      // 각 스테이지 원형 네온 발판 노드 (X-1 ~ X-9) 및 다이아몬드 보스 인장 (X-10)
+      actStages.forEach((st) => {
+        const isCurrent = st.id === state.currentStageId;
+        const isBoss = st.isBoss;
+        const depthScale = Math.max(0.76, Math.min(1.12, 0.72 + (st.mapY / 236) * 0.42));
+
+        if (isBoss) {
+          const bx = st.mapX;
+          const by = st.mapY;
+          const bCol = isCurrent ? '#4ade80' : '#f472b6';
+          html += `
+            <g class="map-node-btn cursor-pointer boss-diamond-float" data-stage-id="${st.id}">
+              <polygon points="${bx},${by - 25} ${bx + 29},${by} ${bx},${by + 25} ${bx - 29},${by}" fill="#1a061c" fill-opacity="0.92" stroke="#e879f9" stroke-width="2.5" filter="url(#neonGlow)" />
+              <polygon points="${bx},${by - 20} ${bx + 23},${by} ${bx},${by + 20} ${bx - 23},${by}" fill="none" stroke="${bCol}" stroke-width="1.2" />
+              <text x="${bx}" y="${by - 2}" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="900" font-family="Inter, sans-serif">${st.id}</text>
+              <text x="${bx}" y="${by + 10}" text-anchor="middle" fill="#f5d0fe" font-size="8.5" font-weight="800" font-family="Noto Sans KR, sans-serif">보스</text>
+              ${isCurrent ? `<circle cx="${bx}" cy="${by}" r="27" fill="none" stroke="#4ade80" stroke-width="2.2" class="map-target-ring" />` : ''}
+            </g>
+          `;
+        } else {
+          const rx = Math.round(15.5 * depthScale);
+          const ry = Math.round(9 * depthScale);
+          const ringColor = isCurrent ? '#4ade80' : st.ringCol;
+          const innerFill = isCurrent ? 'rgba(6, 78, 59, 0.92)' : 'rgba(7, 12, 26, 0.88)';
+
+          html += `
+            <g class="map-node-btn cursor-pointer" data-stage-id="${st.id}">
+              ${isCurrent ? `
+                <ellipse cx="${st.mapX}" cy="${st.mapY}" rx="${rx + 6}" ry="${ry + 4}" fill="none" stroke="#4ade80" stroke-width="2.2" class="map-target-ring" />
+              ` : ''}
+              <ellipse cx="${st.mapX}" cy="${st.mapY}" rx="${rx}" ry="${ry}" fill="${innerFill}" stroke="${ringColor}" stroke-width="2" filter="url(#neonGlow)" />
+              <ellipse cx="${st.mapX}" cy="${st.mapY}" rx="${Math.max(4, rx - 3)}" ry="${Math.max(2.5, ry - 2)}" fill="none" stroke="#ffffff" stroke-width="0.6" opacity="0.65" />
+              <text x="${st.mapX}" y="${st.mapY + 3.1}" text-anchor="middle" fill="${isCurrent ? '#bbf7d0' : '#ffffff'}" font-size="${Math.max(7.5, Math.round(9 * depthScale))}" font-weight="900" font-family="Inter, monospace" style="text-shadow: 0 1px 3px #000;">
+                ${st.id}
+              </text>
+              ${isCurrent ? `
+                <polygon points="${st.mapX},${st.mapY - ry - 3} ${st.mapX - 5},${st.mapY - ry - 11} ${st.mapX + 5},${st.mapY - ry - 11}" fill="#4ade80" stroke="#052e16" stroke-width="0.9" />
+              ` : ''}
+            </g>
+          `;
+        }
+      });
+
+      svg.innerHTML = html;
+
+      svg.querySelectorAll('.map-node-btn').forEach(el => {
+        el.addEventListener('click', () => {
+          const targetId = el.getAttribute('data-stage-id');
+          travelToStage(targetId);
+        });
+      });
+
+      document.getElementById('mapSelectedStageTitle').textContent = `현재: ${curStg.name}`;
+      document.getElementById('mapSelectedStageMeta').textContent = curStg.isBoss
+        ? `권장 전투력 ${curStg.recPower} · 도전권 1장 소모`
+        : `권장 전투력 ${curStg.recPower} · 도전권 드랍 ${Math.round(curStg.dropRate * 100)}%`;
+    }
+
+    // ============================================================================
+    // 6. 하단 초슬림 태스크바 전투 엔진 (컨셉아트 패럴랙스 배경 + 정교한 협객 실루엣 액션)
+    // ============================================================================
+    const canvas = document.getElementById('battleCanvas');
+    const ctx = canvas.getContext('2d');
+    const GROUND_Y = 116;
+
+    let heroes = [];
+    let enemies = [];
+    let slashEffects = [];
+    let floatingTexts = [];
+    let bgScrollX = 0;
+
+    function buildPartyEntities() {
+      const sortedIds = [...state.activeParty].sort((a, b) => CHARACTERS[a].posOrder - CHARACTERS[b].posOrder);
+      const slotX = [185, 136, 88];
+      heroes = sortedIds.map((cid, idx) => {
+        const cfg = CHARACTERS[cid];
+        const st = getCharStats(cid);
+        return {
+          id: cid,
+          name: cfg.name,
+          color: cfg.color,
+          accent: cfg.accent,
+          x: slotX[idx] || (185 - idx * 48),
+          baseX: slotX[idx] || (185 - idx * 48),
+          y: GROUND_Y,
+          hp: st.maxHp,
+          maxHp: st.maxHp,
+          shield: cid === 'gangsan' ? Math.round(st.maxHp * 0.2) : 0,
+          mp: 40 + idx * 15,
+          maxMp: 100,
+          atkTimer: 0,
+          lungeOffset: 0
+        };
+      });
+    }
+
+    function spawnWaveEnemies() {
+      enemies = [];
+      const stg = STAGES[state.currentStageId];
+      const count = stg.isBoss ? 1 : 3;
+
+      for (let i = 0; i < count; i++) {
+        const isElite = !stg.isBoss && (i === count - 1) && state.wave >= 3;
+        const hpScale = stg.isBoss ? 1 : (0.85 + state.wave * 0.12) * (isElite ? 1.6 : 1);
+        const maxHp = Math.round(stg.enemyHp * hpScale);
+        const hasShield = stg.isBoss || (state.currentStageId !== '1-1' && i === 0);
+
+        enemies.push({
+          name: stg.isBoss ? (stg.act === 1 ? '철면 집행자 도철' : '전뇌 방장 무심') : (isElite ? '정예 집행무사' : (i % 2 === 0 ? '감시 드론' : '기업 하수인')),
+          isBoss: stg.isBoss,
+          isDrone: !stg.isBoss && (i % 2 === 0),
+          x: 310 + i * 56,
+          y: stg.isBoss ? GROUND_Y : (i % 2 === 0 ? 74 : GROUND_Y),
+          hp: maxHp,
+          maxHp: maxHp,
+          shield: hasShield ? Math.round(maxHp * 0.25) : 0,
+          maxShield: hasShield ? Math.round(maxHp * 0.25) : 0,
+          atk: stg.enemyAtk,
+          atkTimer: Math.random() * 0.8,
+          shocked: 0,
+          poisoned: 0,
+          phase: 1
+        });
+      }
+      updateTopBarUI();
+    }
+
+    function addFloatingText(x, y, text, color, isBig = false) {
+      floatingTexts.push({
+        x: x + (Math.random() * 14 - 7),
+        y,
+        text,
+        color,
+        isBig,
+        alpha: 1.0,
+        vy: isBig ? -0.9 : -0.65
+      });
+    }
+
+    function addSlashEffect(x1, y1, x2, y2, color, style = 'slash') {
+      slashEffects.push({
+        x1, y1, x2, y2,
+        color,
+        style,
+        alpha: 1.0
+      });
+    }
+
+    function triggerHeroSkill(hero) {
+      const cfg = CHARACTERS[hero.id];
+      const st = getCharStats(hero.id);
+      const skillMult = 1 + (cfg.skillLv - 1) * 0.18;
+      playSynthSound('skill');
+
+      if (hero.id === 'gangsan') {
+        heroes.forEach(h => {
+          h.shield = Math.min(h.maxHp, h.shield + Math.round(h.maxHp * 0.28 * skillMult));
+        });
+        addFloatingText(hero.x, hero.y - 30, '🛡️철벽!', '#38bdf8', true);
+        if (enemies[0]) {
+          const dmg = Math.round(st.atk * 2.1 * skillMult);
+          applyDamageToEnemy(enemies[0], dmg, '#f59e0b', true);
+          addSlashEffect(hero.x + 12, hero.y - 14, enemies[0].x, enemies[0].y - 14, '#38bdf8', 'shockwave');
+        }
+      } else if (hero.id === 'muk') {
+        const target = enemies[0];
+        if (target) {
+          const bonusShock = target.shocked > 0 ? 1.35 : 1.0;
+          const totalDmg = Math.round(st.atk * 3.3 * skillMult * bonusShock);
+          applyDamageToEnemy(target, totalDmg, '#00f3ff', true);
+          hero.hp = Math.min(hero.maxHp, hero.hp + Math.round(totalDmg * 0.18));
+          addFloatingText(hero.x, hero.y - 32, '⚔️연검!', '#00f3ff', true);
+          addSlashEffect(hero.x, hero.y - 14, target.x + 16, target.y - 22, '#00f3ff', 'tripleSlash');
+        }
+      } else if (hero.id === 'ran') {
+        addFloatingText(hero.x, hero.y - 32, '⚡뇌장!', '#e879f9', true);
+        enemies.forEach(en => {
+          const dmg = Math.round(st.atk * 2.15 * skillMult);
+          en.shocked = 5.0;
+          applyDamageToEnemy(en, dmg, '#e879f9', true);
+          addSlashEffect(hero.x + 8, hero.y - 24, en.x, en.y - 14, '#d946ef', 'lightning');
+        });
+      } else if (hero.id === 'cho') {
+        addFloatingText(hero.x, hero.y - 32, '💉침술!', '#10b981', true);
+        heroes.forEach(h => {
+          const heal = Math.round(h.maxHp * 0.30 * skillMult);
+          h.hp = Math.min(h.maxHp, h.hp + heal);
+          if (h.hp / h.maxHp <= 0.45) {
+            h.shield += Math.round(h.maxHp * 0.25);
+          }
+        });
+        enemies.forEach(en => {
+          en.poisoned = 6.0;
+          const dmg = Math.round(st.atk * 1.45 * skillMult);
+          applyDamageToEnemy(en, dmg, '#10b981', false);
+          addSlashEffect(hero.x, hero.y - 14, en.x, en.y - 14, '#10b981', 'needle');
+        });
+      }
+    }
+
+    function applyDamageToEnemy(enemy, rawDmg, color, isCrit) {
+      let dmg = rawDmg;
+      if (enemy.shocked > 0) dmg = Math.round(dmg * 1.25);
+
+      if (enemy.shield > 0) {
+        const absorbed = Math.min(enemy.shield, dmg);
+        enemy.shield -= absorbed;
+        dmg -= absorbed;
+      }
+      enemy.hp = Math.max(0, enemy.hp - dmg);
+      addFloatingText(enemy.x, enemy.y - 24, (isCrit ? '💥' : '') + dmg, color, isCrit);
+
+      if (enemy.isBoss && enemy.phase === 1 && enemy.hp > 0 && enemy.hp < enemy.maxHp * 0.5) {
+        enemy.phase = 2;
+        enemy.shield = Math.round(enemy.maxHp * 0.22);
+        addFloatingText(enemy.x - 15, enemy.y - 38, '⚠️2페이즈!', '#f43f5e', true);
+        enemies.push({
+          name: '호위 드론',
+          isBoss: false,
+          isDrone: true,
+          x: enemy.x - 40,
+          y: 48,
+          hp: Math.round(enemy.maxHp * 0.22),
+          maxHp: Math.round(enemy.maxHp * 0.22),
+          shield: 0,
+          maxShield: 0,
+          atk: Math.round(enemy.atk * 0.7),
+          atkTimer: 0,
+          shocked: 0,
+          poisoned: 0,
+          phase: 1
+        });
+      }
+    }
+
+    function handleEnemyDefeated(enemy) {
+      const stg = STAGES[state.currentStageId];
+      state.credits += stg.rewardCredit;
+
+      if (Math.random() < 0.18 && state.bag.length < 12) {
+        createRandomGearDrop(false);
+      }
+
+      if (enemy.isBoss) {
+        state.elixirs += 12;
+        state.firstBossCleared[state.currentStageId] = true;
+        showCombatToast(`🎉 ${enemy.name} 토벌 성공! 나노 영약 +12◈`);
+
+        if (state.currentStageId === '1-10' && !CHARACTERS.cho.unlocked) {
+          CHARACTERS.cho.unlocked = true;
+          showCombatToast('🌿 1-10 클리어: 침술 힐러 [초] 합류!');
+          renderPartyTab();
+          renderSkillsTab();
+        }
+        state.currentStageId = state.currentStageId === '1-10' ? '2-1' : '2-9';
+        state.viewingMapAct = STAGES[state.currentStageId].act;
+        document.getElementById('stageSelect').value = state.currentStageId;
+        state.wave = 1;
+        spawnWaveEnemies();
+        updateAllUI();
+      }
+    }
+
+    function onWaveCleared() {
+      const stg = STAGES[state.currentStageId];
+      if (!stg.isBoss) {
+        state.shards += 1;
+        if (state.shards >= 20) {
+          state.shards -= 20;
+          state.tickets += 1;
+          showCombatToast('🎴 조각 20개 달성! 도전권 1장 합성!');
+        } else if (Math.random() < stg.dropRate) {
+          state.tickets += 1;
+          showCombatToast('🎴 도전권 1장 드랍 획득!');
+        }
+
+        state.wave += 1;
+        if (state.wave > state.maxWave) {
+          state.wave = 1;
+          state.elixirs += 1;
+        }
+      }
+      spawnWaveEnemies();
+      updateAllUI();
+    }
+
+    let lastFrameTime = performance.now();
+
+    function updateBattle(dt) {
+      const scaledDt = dt * state.gameSpeed;
+      const frontEnemy = enemies[0];
+
+      const engageDist = frontEnemy ? (frontEnemy.x - heroes[0].baseX) : 999;
+      const isMoving = !frontEnemy || engageDist > 54;
+
+      if (isMoving) {
+        bgScrollX = (bgScrollX + scaledDt * 85) % 900;
+        enemies.forEach(en => {
+          en.x -= scaledDt * 115;
+        });
+      }
+
+      if (state.leaderId === 'cho') {
+        heroes.forEach(h => {
+          h.hp = Math.min(h.maxHp, h.hp + h.maxHp * 0.05 * scaledDt);
+        });
+      }
+
+      heroes.forEach(h => {
+        const st = getCharStats(h.id);
+        h.maxHp = st.maxHp;
+        h.mp = Math.min(h.maxMp, h.mp + st.mpRegen * scaledDt);
+        h.lungeOffset = Math.max(0, h.lungeOffset - scaledDt * 55);
+
+        if (!isMoving && frontEnemy) {
+          h.atkTimer += scaledDt;
+          const atkInterval = h.id === 'ran' ? 0.85 : (h.id === 'muk' ? 0.75 : 1.0);
+
+          if (h.mp >= h.maxMp && state.autoSkill) {
+            h.mp = 0;
+            h.lungeOffset = 14;
+            triggerHeroSkill(h);
+          } else if (h.atkTimer >= atkInterval) {
+            h.atkTimer = 0;
+            h.lungeOffset = 9;
+            const isCrit = Math.random() < st.critRate;
+            const dmg = Math.round(st.atk * (isCrit ? st.critDmg : 1.0));
+            playSynthSound('slash');
+            applyDamageToEnemy(frontEnemy, dmg, h.color, isCrit);
+            addSlashEffect(h.x + 10, h.y - 14, frontEnemy.x, frontEnemy.y - 14, h.color, 'slash');
+
+            if (frontEnemy.hp <= 0 && h.id === 'muk') {
+              heroes.forEach(ally => { ally.mp = Math.min(ally.maxMp, ally.mp + 15); });
+            }
+          }
+        }
+      });
+
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        const en = enemies[i];
+        if (en.shocked > 0) en.shocked = Math.max(0, en.shocked - scaledDt);
+        if (en.poisoned > 0) {
+          en.poisoned = Math.max(0, en.poisoned - scaledDt);
+          en.hp = Math.max(0, en.hp - Math.round(en.maxHp * 0.025 * scaledDt));
+        }
+
+        if (en.hp <= 0) {
+          enemies.splice(i, 1);
+          handleEnemyDefeated(en);
+          continue;
+        }
+
+        if (!isMoving && heroes.length > 0) {
+          en.atkTimer += scaledDt;
+          if (en.atkTimer >= 1.35) {
+            en.atkTimer = 0;
+            const targetHero = heroes[0];
+            let incoming = en.atk;
+            if (en.poisoned > 0) incoming = Math.round(incoming * 0.8);
+            if (state.leaderId === 'gangsan') incoming = Math.round(incoming * 0.8);
+
+            if (targetHero.shield > 0) {
+              const abs = Math.min(targetHero.shield, incoming);
+              targetHero.shield -= abs;
+              incoming -= abs;
+            }
+            targetHero.hp = Math.max(1, targetHero.hp - incoming);
+
+            if (targetHero.hp <= 1 && STAGES[state.currentStageId].isBoss) {
+              const bossId = state.currentStageId;
+              if (!state.firstBossCleared[bossId]) {
+                state.tickets += 1;
+                showCombatToast('⚠️ 보스전 후퇴 (첫 클리어 전 도전권 반환)');
+              } else {
+                showCombatToast('⚠️ 보스전 후퇴! 이전 구역으로 복귀합니다.');
+              }
+              state.currentStageId = STAGES[bossId].act === 1 ? '1-9' : '2-9';
+              document.getElementById('stageSelect').value = state.currentStageId;
+              buildPartyEntities();
+              spawnWaveEnemies();
+              updateAllUI();
+              return;
+            } else if (targetHero.hp <= 1) {
+              targetHero.hp = Math.round(targetHero.maxHp * 0.6);
+            }
+          }
+        }
+      }
+
+      if (enemies.length === 0) {
+        onWaveCleared();
+      }
+
+      slashEffects.forEach(ef => { ef.alpha -= scaledDt * 3.8; });
+      slashEffects = slashEffects.filter(ef => ef.alpha > 0);
+
+      floatingTexts.forEach(ft => {
+        ft.y += ft.vy;
+        ft.alpha -= scaledDt * 1.4;
+      });
+      floatingTexts = floatingTexts.filter(ft => ft.alpha > 0);
+    }
+
+    function drawBattleScene() {
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      // 1. 하단 태스크바 스트립 패럴랙스 배경 (컨셉아트 1맵 네온 성문 일러스트 적용)
+      const bgArt = document.getElementById('imgBgNeonGate');
+      if (bgArt && bgArt.complete && bgArt.naturalWidth > 0) {
+        ctx.save();
+        ctx.globalAlpha = 0.48;
+        const tileW = 460;
+        const offset = -(bgScrollX * 0.5) % tileW;
+        for (let x = offset - tileW; x < w + tileW; x += tileW) {
+          ctx.drawImage(bgArt, 0, 20, bgArt.naturalWidth, bgArt.naturalHeight - 40, x, 0, tileW, h - 16);
+        }
+        ctx.restore();
+      }
+
+      // 상단 경계 그라데이션 페이드 (바탕화면과 자연스럽게 녹아들도록 처리)
+      const topFade = ctx.createLinearGradient(0, 0, 0, 32);
+      topFade.addColorStop(0, '#030408');
+      topFade.addColorStop(1, 'rgba(3, 4, 8, 0)');
+      ctx.fillStyle = topFade;
+      ctx.fillRect(0, 0, w, 32);
+
+      // 바닥 타일 스트립 & 네온 라인
+      ctx.fillStyle = '#070b14';
+      ctx.fillRect(0, GROUND_Y, w, h - GROUND_Y);
+      ctx.strokeStyle = '#00f3ff';
+      ctx.shadowColor = '#00f3ff';
+      ctx.shadowBlur = 6;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, GROUND_Y);
+      ctx.lineTo(w, GROUND_Y);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // 2. 좌측 네온 성문 포털
+      ctx.save();
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(18, GROUND_Y - 38, 28, 38);
+      ctx.strokeStyle = '#00f3ff';
+      ctx.shadowColor = '#00f3ff';
+      ctx.shadowBlur = 10;
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.ellipse(32, GROUND_Y - 17, 7, 13, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+
+      // 3. 중앙 전리품 상자 말풍선
+      if (heroes.length > 0) {
+        const leadX = heroes[1] ? heroes[1].x : heroes[0].x;
+        const bx = leadX - 24;
+        const by = 38;
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 1.5;
+        ctx.fillRect(bx, by, 48, 24);
+        ctx.strokeRect(bx, by, 48, 24);
+        ctx.font = '11px sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText('📦', bx + 17, by + 14);
+        for (let d = 1; d <= 5; d++) {
+          ctx.fillStyle = d <= state.wave ? '#00f3ff' : '#334155';
+          ctx.fillRect(bx + 8 + (d - 1) * 7, by + 18, 4, 3);
+        }
+      }
+
+      // 4. 아군 협객 3인 (먹 실루엣 + 망토 + 네온 안광/무기)
+      heroes.forEach(h => {
+        const drawX = h.x + h.lungeOffset;
+        const drawY = h.y;
+
+        ctx.save();
+        if (h.shield > 0) {
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.65)';
+          ctx.fillStyle = 'rgba(56, 189, 248, 0.1)';
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.arc(drawX, drawY - 14, 16, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+
+        // 휘날리는 먹빛 망토
+        ctx.fillStyle = '#05070c';
+        ctx.beginPath();
+        ctx.moveTo(drawX - 4, drawY - 22);
+        ctx.lineTo(drawX - 18, drawY - 6);
+        ctx.lineTo(drawX - 6, drawY - 3);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#090c14';
+        ctx.strokeStyle = h.color;
+        ctx.lineWidth = 1.6;
+
+        if (h.id === 'gangsan') {
+          ctx.fillRect(drawX - 9, drawY - 26, 18, 23);
+          ctx.strokeRect(drawX - 9, drawY - 26, 18, 23);
+          ctx.beginPath();
+          ctx.arc(drawX, drawY - 30, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = h.accent;
+          ctx.shadowColor = h.accent;
+          ctx.shadowBlur = 8;
+          ctx.fillRect(drawX + 6, drawY - 20, 9, 9);
+        } else if (h.id === 'muk') {
+          ctx.beginPath();
+          ctx.moveTo(drawX - 8, drawY - 2);
+          ctx.lineTo(drawX - 3, drawY - 26);
+          ctx.lineTo(drawX + 6, drawY - 26);
+          ctx.lineTo(drawX + 8, drawY - 2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          // 삿갓 실루엣
+          ctx.beginPath();
+          ctx.moveTo(drawX - 9, drawY - 28);
+          ctx.lineTo(drawX + 1, drawY - 35);
+          ctx.lineTo(drawX + 11, drawY - 28);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          // 시안색 진동검
+          ctx.strokeStyle = '#00f3ff';
+          ctx.shadowColor = '#00f3ff';
+          ctx.shadowBlur = 10;
+          ctx.lineWidth = 2.4;
+          ctx.beginPath();
+          ctx.moveTo(drawX + 4, drawY - 15);
+          ctx.lineTo(drawX + 26, drawY - 27);
+          ctx.stroke();
+        } else if (h.id === 'ran') {
+          ctx.beginPath();
+          ctx.moveTo(drawX - 7, drawY - 2);
+          ctx.lineTo(drawX, drawY - 26);
+          ctx.lineTo(drawX + 7, drawY - 2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = '#e879f9';
+          ctx.shadowColor = '#e879f9';
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.arc(drawX + 11, drawY - 19, 5.5, 0, Math.PI * 2);
+          ctx.stroke();
+        } else if (h.id === 'cho') {
+          ctx.beginPath();
+          ctx.moveTo(drawX - 7, drawY - 2);
+          ctx.lineTo(drawX, drawY - 25);
+          ctx.lineTo(drawX + 7, drawY - 2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = '#10b981';
+          ctx.shadowColor = '#10b981';
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.arc(drawX + 10, drawY - 17, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        const barW = 22;
+        const hpRatio = Math.max(0, Math.min(1, h.hp / h.maxHp));
+        ctx.fillStyle = 'rgba(0,0,0,0.85)';
+        ctx.fillRect(drawX - barW / 2, drawY - 40, barW, 3.5);
+        ctx.fillStyle = '#22c55e';
+        ctx.fillRect(drawX - barW / 2, drawY - 40, barW * hpRatio, 3.5);
+      });
+
+      // 5. 적 및 보스
+      enemies.forEach(en => {
+        ctx.save();
+        const isBoss = en.isBoss;
+        const size = isBoss ? 19 : (en.isDrone ? 9 : 13);
+
+        ctx.fillStyle = '#0c0f17';
+        ctx.strokeStyle = isBoss ? '#f43f5e' : (en.shocked > 0 ? '#e879f9' : '#fb7185');
+        ctx.lineWidth = isBoss ? 2.2 : 1.5;
+
+        if (en.isDrone) {
+          ctx.beginPath();
+          ctx.arc(en.x, en.y - 8, size, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        } else {
+          const boxH = isBoss ? 38 : 26;
+          ctx.fillRect(en.x - size / 2, en.y - boxH, size, boxH - 2);
+          ctx.strokeRect(en.x - size / 2, en.y - boxH, size, boxH - 2);
+          ctx.strokeStyle = '#f43f5e';
+          ctx.shadowColor = '#f43f5e';
+          ctx.shadowBlur = 8;
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.moveTo(en.x - 4, en.y - 16);
+          ctx.lineTo(en.x - 22, en.y - 24);
+          ctx.stroke();
+        }
+
+        const eBarW = isBoss ? 42 : 24;
+        const eBarY = en.isDrone ? en.y - 22 : (isBoss ? en.y - 44 : en.y - 32);
+        ctx.fillStyle = 'rgba(0,0,0,0.85)';
+        ctx.fillRect(en.x - eBarW / 2, eBarY, eBarW, 3.5);
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(en.x - eBarW / 2, eBarY, eBarW * (en.hp / en.maxHp), 3.5);
+        ctx.restore();
+      });
+
+      // 6. 네온 검광 이펙트
+      slashEffects.forEach(ef => {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, ef.alpha);
+        ctx.strokeStyle = ef.color;
+        ctx.shadowColor = ef.color;
+        ctx.shadowBlur = 12;
+        ctx.lineWidth = ef.style === 'tripleSlash' ? 3 : 2.2;
+
+        ctx.beginPath();
+        if (ef.style === 'tripleSlash') {
+          for (let k = -1; k <= 1; k++) {
+            ctx.moveTo(ef.x1, ef.y1 + k * 5);
+            ctx.quadraticCurveTo((ef.x1 + ef.x2) / 2, ef.y1 - 15 + k * 5, ef.x2, ef.y2 + k * 5);
+          }
+        } else {
+          ctx.moveTo(ef.x1, ef.y1);
+          ctx.quadraticCurveTo((ef.x1 + ef.x2) / 2, ef.y1 - 11, ef.x2, ef.y2);
+        }
+        ctx.stroke();
+        ctx.restore();
+      });
+
+      // 7. 데미지 플로팅 텍스트
+      floatingTexts.forEach(ft => {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, ft.alpha);
+        ctx.font = ft.isBig ? '800 10px "Noto Sans KR", sans-serif' : '700 9px "Inter", sans-serif';
+        ctx.fillStyle = ft.color;
+        ctx.fillText(ft.text, ft.x, ft.y);
+        ctx.restore();
+      });
+    }
+
+    // ============================================================================
+    // 7. UI 업데이트 및 이벤트 핸들러
+    // ============================================================================
+    function showCombatToast(msg) {
+      const el = document.getElementById('combatToast');
+      if (el) el.textContent = msg;
+    }
+
+    function switchMainTab(target) {
+      state.activeTab = target;
+      if (state.topPanelCollapsed) toggleTopManagementPanel(false);
+
+      const headerTitles = {
+        party: 'HERO · 협객단',
+        inventory: 'BAG · 장비/가방',
+        training: 'STATUS · 수련/경지',
+        skills: 'SKILL · 무공비급',
+        map: 'PORTAL · 출정 지도'
+      };
+      document.getElementById('windowHeaderTitle').textContent = headerTitles[target] || 'HERO · 협객단';
+
+      const inspectorBox = document.getElementById('heroInspectorBox');
+      const contentBox = document.getElementById('tabContentContainer');
+      if (target === 'map') {
+        inspectorBox.classList.add('hidden');
+        contentBox.classList.remove('h-[175px]');
+        contentBox.classList.add('h-[305px]');
+        renderPortalMapTab();
+      } else {
+        inspectorBox.classList.remove('hidden');
+        contentBox.classList.remove('h-[305px]');
+        contentBox.classList.add('h-[175px]');
+      }
+
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        const bTab = b.getAttribute('data-tab');
+        if (bTab === target) {
+          b.className = 'tab-btn py-1.5 px-0.5 rounded bg-gradient-to-b from-cyan-900/70 to-fuchsia-950/70 border-2 border-cyan-400 text-cyan-100 font-bold text-[10px] flex flex-col items-center justify-center gap-0.5 transition relative shadow-[0_0_10px_rgba(0,243,255,0.3)]';
+        } else {
+          b.className = 'tab-btn py-1.5 px-0.5 rounded bg-[#141a29] border border-slate-700 text-slate-300 hover:text-white font-bold text-[10px] flex flex-col items-center justify-center gap-0.5 transition relative';
+        }
+      });
+
+      document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.add('hidden'));
+      document.getElementById(`tab-${target}`).classList.remove('hidden');
+    }
+
+    function updateInspectorCard() {
+      const ch = CHARACTERS[state.selectedEquipChar];
+      const totalLv = getTotalTrainingLv();
+      drawHeroPortrait(ch.id);
+
+      document.getElementById('inspectorRoleBadge').textContent = ch.roleBadge;
+      document.getElementById('inspectorDescText').textContent = ch.bio;
+      document.getElementById('inspectorNameTitle').textContent = `${ch.name} (${ch.title})`;
+      document.getElementById('inspectorMiniAvatar').textContent = state.activeParty.includes(ch.id)
+        ? `⚔️ [${ch.name}] 출전중`
+        : `🍵 [${ch.name}] 약방대기`;
+      document.getElementById('inspectorLvText').textContent = `수련 Lv.${totalLv}`;
+
+      document.getElementById('hexLv1').textContent = `${state.training.atkLv}/10`;
+      document.getElementById('hexLv2').textContent = `${state.training.hpLv}/10`;
+      document.getElementById('hexLv3').textContent = `${state.training.critLv}/10`;
+      document.getElementById('hexLv4').textContent = `${state.training.mpLv}/10`;
+      document.getElementById('hexLv5').textContent = `${ch.skillLv}/5`;
+      document.getElementById('hexLv6').textContent = `${state.realmIdx + 1}성`;
+
+      const sortedParty = [...state.activeParty].sort((a, b) => CHARACTERS[a].posOrder - CHARACTERS[b].posOrder);
+      const slotsHtml = [0, 1, 2].map(idx => {
+        const cid = sortedParty[idx];
+        if (!cid) {
+          return `<div class="h-8 rounded bg-slate-950 border border-slate-800 flex items-center justify-center text-[9px] text-slate-600">빈슬롯</div>`;
+        }
+        const cObj = CHARACTERS[cid];
+        const isSel = cid === state.selectedEquipChar;
+        return `
+          <button data-inspect-char="${cid}" class="inspect-slot-btn h-8 rounded bg-slate-900 border-2 ${isSel ? 'border-emerald-400' : 'border-slate-700'} flex flex-col items-center justify-center text-[9px] font-bold text-white leading-none">
+            <span style="color:${cObj.color}">${cObj.name}</span>
+            <span class="text-[8px] text-slate-400 mt-0.5">${idx === 0 ? '전열' : (idx === 1 ? '중열' : '후열')}</span>
+          </button>
+        `;
+      }).join('');
+      const slotBox = document.getElementById('inspectorActive3Slots');
+      slotBox.innerHTML = slotsHtml;
+      slotBox.querySelectorAll('.inspect-slot-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.selectedEquipChar = btn.getAttribute('data-inspect-char');
+          updateAllUI();
+        });
+      });
+    }
+
+    function updateTopBarUI() {
+      const realm = REALMS[state.realmIdx];
+      const nextRealm = REALMS[Math.min(REALMS.length - 1, state.realmIdx + 1)];
+      const stg = STAGES[state.currentStageId];
+      const nextStgId = getNextStageId();
+      const nextStg = STAGES[nextStgId];
+
+      document.getElementById('realmNameText').textContent = realm.name;
+      document.getElementById('creditText').textContent = state.credits.toLocaleString();
+      document.getElementById('elixirText').textContent = state.elixirs.toLocaleString();
+      document.getElementById('ticketLabelText').textContent = stg.act === 1 ? '성문 혈패' : '전뇌 열쇠';
+      document.getElementById('ticketCountText').textContent = state.tickets;
+      document.getElementById('shardCountText').textContent = state.shards;
+      document.getElementById('partyPowerText').textContent = getPartyCombatPower().toLocaleString();
+
+      document.getElementById('stripStageName').textContent = stg.name;
+      document.getElementById('stripWaveText').textContent = stg.isBoss ? '(BOSS)' : `(${state.wave}/${state.maxWave})`;
+      document.getElementById('stripTicketMini').textContent = `${state.tickets}/1`;
+      document.getElementById('bossBtnSubText').textContent = nextStg.isBoss ? '보스▶' : '다음▶';
+
+      const t = state.training;
+      const mult = getRealmMultiplier();
+      document.getElementById('statAtkLv').textContent = `Lv.${t.atkLv}`;
+      document.getElementById('statAtkVal').textContent = `+${Math.round(t.atkLv * 9 * mult)}`;
+      document.getElementById('costAtkText').textContent = `${t.atkLv * 30} ₵`;
+
+      document.getElementById('statHpLv').textContent = `Lv.${t.hpLv}`;
+      document.getElementById('statHpVal').textContent = `+${Math.round(t.hpLv * 85 * mult)}`;
+      document.getElementById('costHpText').textContent = `${t.hpLv * 30} ₵`;
+
+      document.getElementById('statCritLv').textContent = `Lv.${t.critLv}`;
+      document.getElementById('statCritVal').textContent = `${Math.round((0.10 + t.critLv * 0.02 + (state.leaderId === 'muk' ? 0.15 : 0)) * 100)}%`;
+      document.getElementById('statCritDmgVal').textContent = `${Math.round((1.55 + t.critLv * 0.05) * 100)}%`;
+      document.getElementById('costCritText').textContent = `${t.critLv * 45} ₵`;
+
+      document.getElementById('statMpLv').textContent = `Lv.${t.mpLv}`;
+      document.getElementById('statMpVal').textContent = `+${6 + t.mpLv * 2}/s`;
+      document.getElementById('costMpText').textContent = `${t.mpLv * 40} ₵`;
+
+      const totalLv = getTotalTrainingLv();
+      document.getElementById('totalStatLvBadge').textContent = `총 수련 Lv.${totalLv} / ${nextRealm.reqLv}`;
+      document.getElementById('currentRealmTitle').textContent = `현재: ${realm.name}`;
+      document.getElementById('nextRealmTitle').textContent = state.realmIdx >= REALMS.length - 1 ? '최고 경지 도달' : nextRealm.name;
+      document.getElementById('breakthroughCostText').textContent = state.realmIdx >= REALMS.length - 1 ? 'MAX' : `나노 영약 ${nextRealm.costElixir}◈`;
+
+      updateInspectorCard();
+    }
+
+    function renderInventoryTab() {
+      document.getElementById('bagCountBadge').textContent = state.bag.length;
+
+      document.querySelectorAll('.equip-char-btn').forEach(btn => {
+        const cid = btn.getAttribute('data-char');
+        btn.className = cid === state.selectedEquipChar
+          ? 'equip-char-btn px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-600 text-white'
+          : 'equip-char-btn px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 hover:bg-slate-700';
+      });
+
+      const eq = state.equipped[state.selectedEquipChar];
+      const slotMeta = [
+        { key: 'weapon', icon: '🗡️', label: '무기', unit: '공격' },
+        { key: 'robe', icon: '🥋', label: '도복', unit: '체력' },
+        { key: 'core', icon: '🔋', label: '코어', unit: '내공' }
+      ];
+
+      document.getElementById('equippedSlotsContainer').innerHTML = slotMeta.map(sm => {
+        const item = eq[sm.key];
+        return `
+          <div class="bg-slate-950/90 border border-slate-800 rounded px-2 py-1 flex items-center justify-between">
+            <div class="truncate">
+              <span class="text-[9px] text-slate-400">${sm.icon}${sm.label}</span>
+              <div class="font-bold text-slate-100 text-[10px] truncate">${item.name} <span class="text-cyan-300 font-mono">+${item.lv}</span></div>
+            </div>
+            <span class="text-[10px] font-mono text-emerald-300 shrink-0">+${item.bonus}</span>
+          </div>
+        `;
+      }).join('');
+
+      const bagContainer = document.getElementById('bagGridContainer');
+      if (state.bag.length === 0) {
+        bagContainer.innerHTML = `<div class="col-span-2 text-center text-slate-500 text-[10px] py-6">보관함이 비어 있습니다.</div>`;
+        return;
+      }
+
+      bagContainer.innerHTML = state.bag.map(item => {
+        const slotKor = item.slot === 'weapon' ? '🗡️무기' : (item.slot === 'robe' ? '🥋도복' : '🔋코어');
+        const statKor = item.slot === 'weapon' ? `공격 +${item.bonus}` : (item.slot === 'robe' ? `체력 +${item.bonus}` : `내공 +${item.bonus}/s`);
+        const borderCol = item.rarity === 'epic' ? 'border-fuchsia-500/60' : 'border-cyan-500/40';
+        return `
+          <button data-bag-id="${item.id}" class="bag-item-btn text-left bg-slate-950 hover:bg-slate-800 border ${borderCol} rounded p-1.5 transition flex flex-col justify-between">
+            <div class="flex items-center justify-between w-full">
+              <span class="text-[9px] text-slate-400">${slotKor}</span>
+              <span class="text-[9px] font-mono text-cyan-300">+${item.lv}</span>
+            </div>
+            <div class="font-bold text-[10px] text-slate-100 truncate">${item.name}</div>
+            <div class="text-[9px] text-emerald-300 font-mono">${statKor}</div>
+          </button>
+        `;
+      }).join('');
+
+      bagContainer.querySelectorAll('.bag-item-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          equipBagItem(Number(btn.getAttribute('data-bag-id')));
+        });
+      });
+    }
+
+    function equipBagItem(itemId) {
+      const idx = state.bag.findIndex(it => it.id === itemId);
+      if (idx === -1) return;
+      const newItem = state.bag[idx];
+      const currentEquipped = state.equipped[state.selectedEquipChar][newItem.slot];
+
+      state.equipped[state.selectedEquipChar][newItem.slot] = newItem;
+      state.bag.splice(idx, 1, {
+        id: state.nextItemId++,
+        name: currentEquipped.name,
+        slot: currentEquipped.slot,
+        rarity: 'rare',
+        lv: currentEquipped.lv,
+        bonus: currentEquipped.bonus
+      });
+
+      playSynthSound('levelup');
+      showCombatToast(`🎒 [${CHARACTERS[state.selectedEquipChar].name}] 장비 장착 완료!`);
+      updateAllUI();
+    }
+
+    function createRandomGearDrop(announce = true) {
+      const templates = [
+        { name: '네온 진동검 개량형', slot: 'weapon', rarity: 'rare', bonus: 26 + state.realmIdx * 12 },
+        { name: '전뇌 사찰 금강권', slot: 'weapon', rarity: 'epic', bonus: 38 + state.realmIdx * 15 },
+        { name: '흑시 방탄 야행복', slot: 'robe', rarity: 'rare', bonus: 120 + state.realmIdx * 45 },
+        { name: '고출력 나노 단전코어', slot: 'core', rarity: 'epic', bonus: 6 + state.realmIdx * 3 }
+      ];
+      const pick = templates[Math.floor(Math.random() * templates.length)];
+      state.bag.push({
+        id: state.nextItemId++,
+        name: pick.name,
+        slot: pick.slot,
+        rarity: pick.rarity,
+        lv: state.realmIdx + 1,
+        bonus: pick.bonus
+      });
+      if (announce) showCombatToast(`📦 [${pick.name}] 획득!`);
+      renderInventoryTab();
+    }
+
+    function renderSkillsTab() {
+      const container = document.getElementById('tab-skills');
+      container.innerHTML = Object.values(CHARACTERS).map(ch => {
+        const isLeader = state.leaderId === ch.id;
+        const cost = ch.skillLv * 5;
+        return `
+          <div class="bg-[#0c1220] border ${isLeader ? 'border-cyan-400' : 'border-slate-800'} rounded p-2 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-[11px] text-white">${ch.name}</span>
+                <span class="text-[9px] px-1 py-0.2 rounded bg-slate-950 text-cyan-300 font-mono">Lv.${ch.skillLv}</span>
+              </div>
+              <div class="text-[10px] font-bold text-cyan-300 mt-0.5">⚡ ${ch.skillName}</div>
+              <p class="text-[9px] text-slate-400 mt-0.5 leading-tight">${ch.skillDesc}</p>
+            </div>
+            <div class="flex items-center gap-1 mt-1.5">
+              <button data-skill-up="${ch.id}" class="btn-skill-up flex-1 py-0.5 rounded bg-emerald-950 hover:bg-emerald-800 border border-emerald-500/40 text-emerald-200 text-[9px] font-bold">
+                강화 (${cost}◈)
+              </button>
+              <button data-set-leader="${ch.id}" class="btn-set-leader px-1.5 py-0.5 rounded ${isLeader ? 'bg-cyan-600 text-white' : 'bg-slate-800 text-slate-300'} text-[9px] font-bold">
+                ${isLeader ? '👑리더' : '리더'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.querySelectorAll('.btn-skill-up').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const cid = btn.getAttribute('data-skill-up');
+          const ch = CHARACTERS[cid];
+          const cost = ch.skillLv * 5;
+          if (state.elixirs < cost) return showCombatToast('⚠️ 나노 영약이 부족합니다.');
+          state.elixirs -= cost;
+          ch.skillLv += 1;
+          playSynthSound('levelup');
+          updateAllUI();
+        });
+      });
+
+      container.querySelectorAll('.btn-set-leader').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.leaderId = btn.getAttribute('data-set-leader');
+          playSynthSound('levelup');
+          updateAllUI();
+        });
+      });
+    }
+
+    function renderPartyTab() {
+      const container = document.getElementById('partyRosterContainer');
+      container.innerHTML = Object.values(CHARACTERS).map(ch => {
+        const inParty = state.activeParty.includes(ch.id);
+        const isSelected = state.selectedEquipChar === ch.id;
+        return `
+          <button data-toggle-party="${ch.id}" class="btn-toggle-party bg-slate-950 hover:bg-slate-900 border-2 ${
+            inParty ? 'border-emerald-400' : (isSelected ? 'border-amber-400' : 'border-slate-800')
+          } rounded p-1.5 flex flex-col items-center justify-between transition relative">
+            <span class="text-[11px] font-extrabold text-white" style="color:${ch.color}">${ch.name}</span>
+            <span class="text-[9px] text-slate-400">${ch.title}</span>
+            <span class="mt-1 px-1.5 py-0.2 rounded text-[9px] font-bold ${
+              !ch.unlocked ? 'bg-slate-900 text-slate-500' : (inParty ? 'bg-emerald-950 text-emerald-300' : 'bg-slate-800 text-slate-300')
+            }">
+              ${!ch.unlocked ? '🔒잠금' : (inParty ? '출전중' : '대기중')}
+            </span>
+          </button>
+        `;
+      }).join('');
+
+      container.querySelectorAll('.btn-toggle-party').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const cid = btn.getAttribute('data-toggle-party');
+          state.selectedEquipChar = cid;
+          const ch = CHARACTERS[cid];
+          if (!ch.unlocked) {
+            updateAllUI();
+            return showCombatToast('🔒 아래 [4인 전원 즉시 해금] 버튼으로 해금할 수 있습니다.');
+          }
+          if (STAGES[state.currentStageId].isBoss) {
+            updateAllUI();
+            return showCombatToast('⚠️ 보스전 중에는 동료를 교체할 수 없습니다.');
+          }
+
+          const idx = state.activeParty.indexOf(cid);
+          if (idx !== -1) {
+            if (state.activeParty.length <= 1) return showCombatToast('⚠️ 최소 1명은 출전해야 합니다.');
+            state.activeParty.splice(idx, 1);
+          } else {
+            if (state.activeParty.length >= 3) state.activeParty.pop();
+            state.activeParty.push(cid);
+          }
+          buildPartyEntities();
+          updateAllUI();
+        });
+      });
+
+      const hasG = state.activeParty.includes('gangsan');
+      const hasM = state.activeParty.includes('muk');
+      const hasR = state.activeParty.includes('ran');
+      const hasC = state.activeParty.includes('cho');
+
+      let synTitle = '커스텀 편성';
+      let synDesc = '전열·중열·후열 순서에 맞춰 자동 전투를 수행합니다.';
+
+      if (hasG && hasM && hasR) {
+        synTitle = '기본 파밍형 (강산+묵+란)';
+        synDesc = '강산 도발 + 란 광역 감전 + 묵 치명타 마무리 조합';
+      } else if (hasG && hasM && hasC) {
+        synTitle = '보스 결전형 (강산+묵+초)';
+        synDesc = '강산의 보호막과 초의 나노 침술로 보스전을 버팁니다.';
+      } else if (hasG && hasR && hasC) {
+        synTitle = '안정 유지형 (강산+란+초)';
+        synDesc = '광역 청소와 지속 회복이 결합된 안정 파밍 조합입니다.';
+      } else if (hasM && hasR && hasC) {
+        synTitle = '고위험 고속형 (묵+란+초)';
+        synDesc = '탱커 없이 3딜/힐로 밀어붙이는 극공격 조합입니다.';
+      }
+
+      document.getElementById('synergyTitleBadge').textContent = synTitle;
+      document.getElementById('synergyDescText').textContent = synDesc;
+
+      const benchChars = Object.values(CHARACTERS).filter(c => !state.activeParty.includes(c.id)).map(c => c.name);
+      document.getElementById('benchCharText').textContent = benchChars.length > 0 ? `약방 대기: ${benchChars.join(', ')} (+5%)` : '대기 인원 없음';
+    }
+
+    function updateAllUI() {
+      updateTopBarUI();
+      renderInventoryTab();
+      renderSkillsTab();
+      renderPartyTab();
+      renderPortalMapTab();
+    }
+
+    // ============================================================================
+    // 8. 컨트롤러 및 버튼 이벤트 바인딩
+    // ============================================================================
+    function bindEvents() {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = btn.getAttribute('data-tab');
+          switchMainTab(target);
+        });
+      });
+
+      document.getElementById('btnQuickMapTop').addEventListener('click', () => {
+        switchMainTab(state.activeTab === 'map' ? 'party' : 'map');
+      });
+
+      document.querySelectorAll('.map-act-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const actNum = Number(btn.getAttribute('data-map-act'));
+          if (actNum === 3) {
+            return showCombatToast('🔒 제3막(천마 데이터 타워)은 2-10 무심 보스 클리어 후 개방 예고 구역입니다.');
+          }
+          state.viewingMapAct = actNum;
+          renderPortalMapTab();
+        });
+      });
+
+      document.getElementById('hexNode1').addEventListener('click', () => document.getElementById('btnUpAtk').click());
+      document.getElementById('hexNode2').addEventListener('click', () => document.getElementById('btnUpHp').click());
+      document.getElementById('hexNode3').addEventListener('click', () => document.getElementById('btnUpCrit').click());
+      document.getElementById('hexNode4').addEventListener('click', () => document.getElementById('btnUpMp').click());
+      document.getElementById('hexNode5').addEventListener('click', () => {
+        const ch = CHARACTERS[state.selectedEquipChar];
+        const cost = ch.skillLv * 5;
+        if (state.elixirs < cost) return showCombatToast(`⚠️ 무공 강화에 나노 영약 ${cost}◈이 필요합니다.`);
+        state.elixirs -= cost;
+        ch.skillLv += 1;
+        playSynthSound('levelup');
+        showCombatToast(`⚡ [${ch.name}] 고유 무공 Lv.${ch.skillLv} 강화!`);
+        updateAllUI();
+      });
+      document.getElementById('hexNode6').addEventListener('click', () => document.getElementById('btnBreakthrough').click());
+
+      document.getElementById('btnToggleTopPanel').addEventListener('click', () => {
+        toggleTopManagementPanel(!state.topPanelCollapsed);
+      });
+      document.getElementById('btnClosePopupTop').addEventListener('click', () => {
+        toggleTopManagementPanel(true);
+      });
+
+      document.getElementById('stageSelect').addEventListener('change', (e) => {
+        travelToStage(e.target.value);
+      });
+
+      document.getElementById('btnChallengeBoss').addEventListener('click', () => {
+        travelToStage(getNextStageId());
+      });
+
+      document.getElementById('btnUpAtk').addEventListener('click', () => {
+        const cost = state.training.atkLv * 30;
+        if (state.credits < cost) return showCombatToast('⚠️ 크레딧이 부족합니다.');
+        state.credits -= cost;
+        state.training.atkLv += 1;
+        playSynthSound('levelup');
+        updateAllUI();
+      });
+
+      document.getElementById('btnUpHp').addEventListener('click', () => {
+        const cost = state.training.hpLv * 30;
+        if (state.credits < cost) return showCombatToast('⚠️ 크레딧이 부족합니다.');
+        state.credits -= cost;
+        state.training.hpLv += 1;
+        playSynthSound('levelup');
+        buildPartyEntities();
+        updateAllUI();
+      });
+
+      document.getElementById('btnUpCrit').addEventListener('click', () => {
+        const cost = state.training.critLv * 45;
+        if (state.credits < cost) return showCombatToast('⚠️ 크레딧이 부족합니다.');
+        state.credits -= cost;
+        state.training.critLv += 1;
+        playSynthSound('levelup');
+        updateAllUI();
+      });
+
+      document.getElementById('btnUpMp').addEventListener('click', () => {
+        const cost = state.training.mpLv * 40;
+        if (state.credits < cost) return showCombatToast('⚠️ 크레딧이 부족합니다.');
+        state.credits -= cost;
+        state.training.mpLv += 1;
+        playSynthSound('levelup');
+        updateAllUI();
+      });
+
+      document.getElementById('btnBreakthrough').addEventListener('click', () => {
+        if (state.realmIdx >= REALMS.length - 1) return showCombatToast('🌌 최고 경지에 도달했습니다!');
+        const nextRealm = REALMS[state.realmIdx + 1];
+        if (getTotalTrainingLv() < nextRealm.reqLv) return showCombatToast(`⚠️ 총 수련 Lv.${nextRealm.reqLv} 이상 필요합니다.`);
+        if (state.elixirs < nextRealm.costElixir) return showCombatToast(`⚠️ 나노 영약 ${nextRealm.costElixir}◈이 필요합니다.`);
+        state.elixirs -= nextRealm.costElixir;
+        state.realmIdx += 1;
+        playSynthSound('skill');
+        buildPartyEntities();
+        showCombatToast(`🌌 [${nextRealm.name}] 경지 돌파 성공!`);
+        updateAllUI();
+      });
+
+      document.querySelectorAll('.equip-char-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.selectedEquipChar = btn.getAttribute('data-char');
+          updateAllUI();
+        });
+      });
+
+      document.getElementById('btnUpgradeAllEquipped').addEventListener('click', () => {
+        if (state.credits < 80) return showCombatToast('⚠️ 크레딧(80₵)이 부족합니다.');
+        state.credits -= 80;
+        const eq = state.equipped[state.selectedEquipChar];
+        eq.weapon.lv += 1; eq.weapon.bonus += 6;
+        eq.robe.lv += 1; eq.robe.bonus += 30;
+        eq.core.lv += 1; eq.core.bonus += 1;
+        playSynthSound('levelup');
+        updateAllUI();
+      });
+
+      document.getElementById('btnCraftGear').addEventListener('click', () => {
+        if (state.credits < 60) return showCombatToast('⚠️ 크레딧(60₵)이 부족합니다.');
+        if (state.bag.length >= 12) return showCombatToast('⚠️ 가방이 가득 찼습니다.');
+        state.credits -= 60;
+        playSynthSound('levelup');
+        createRandomGearDrop(true);
+        updateTopBarUI();
+      });
+
+      document.getElementById('btnSalvageAll').addEventListener('click', () => {
+        if (state.bag.length === 0) return showCombatToast('⚠️ 분해할 장비가 없습니다.');
+        const gainedElixir = state.bag.length * 4;
+        state.bag = [];
+        state.elixirs += gainedElixir;
+        playSynthSound('levelup');
+        showCombatToast(`♻️ 일괄 분해 완료 (+${gainedElixir}◈)`);
+        updateAllUI();
+      });
+
+      document.getElementById('btnUnlockAllChars').addEventListener('click', () => {
+        CHARACTERS.cho.unlocked = true;
+        playSynthSound('levelup');
+        showCombatToast('🔓 [초] 즉시 해금 완료!');
+        updateAllUI();
+      });
+
+      const offlineModal = document.getElementById('offlineModal');
+      document.getElementById('btnOfflineReward').addEventListener('click', () => {
+        offlineModal.classList.remove('hidden');
+        offlineModal.classList.add('flex');
+      });
+      document.getElementById('btnCloseOfflineModal').addEventListener('click', () => {
+        offlineModal.classList.add('hidden');
+        offlineModal.classList.remove('flex');
+      });
+      document.getElementById('btnClaimOffline').addEventListener('click', () => {
+        state.credits += 450;
+        state.elixirs += 6;
+        state.shards += 3;
+        if (state.shards >= 20) {
+          state.shards -= 20;
+          state.tickets += 1;
+        }
+        offlineModal.classList.add('hidden');
+        offlineModal.classList.remove('flex');
+        playSynthSound('skill');
+        updateAllUI();
+      });
+
+      document.getElementById('btnSpeedToggle').addEventListener('click', (e) => {
+        state.gameSpeed = state.gameSpeed === 1 ? 2 : 1;
+        e.currentTarget.textContent = `${state.gameSpeed}x 배속`;
+      });
+
+      document.getElementById('btnSoundToggle').addEventListener('click', (e) => {
+        state.soundEnabled = !state.soundEnabled;
+        e.currentTarget.textContent = state.soundEnabled ? '🔊 효과음 ON' : '🔇 음소거';
+        if (state.soundEnabled) playSynthSound('levelup');
+      });
+
+      document.getElementById('btnAutoSkillToggle').addEventListener('click', (e) => {
+        state.autoSkill = !state.autoSkill;
+        e.currentTarget.textContent = 'AUTO';
+        e.currentTarget.className = state.autoSkill
+          ? 'w-7 h-7 rounded-full bg-cyan-950/90 hover:bg-cyan-800 text-cyan-200 border border-cyan-400/80 text-[8px] font-black font-mono shadow-[0_0_8px_rgba(0,243,255,0.45)] flex items-center justify-center leading-none transition'
+          : 'w-7 h-7 rounded-full bg-slate-900/90 hover:bg-slate-800 text-slate-500 border border-slate-700 text-[8px] font-bold font-mono flex items-center justify-center leading-none transition';
+      });
+
+      document.getElementById('btnDemoSupply').addEventListener('click', () => {
+        state.credits += 1000;
+        state.elixirs += 20;
+        state.tickets += 1;
+        playSynthSound('levelup');
+        showCombatToast('🎁 지원금 지급 (+1,000₵, +20◈, 도전권+1)');
+        updateAllUI();
+      });
+
+      canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const clickX = (e.clientX - rect.left) * (canvas.width / rect.width);
+        const clickY = (e.clientY - rect.top) * (canvas.height / rect.height);
+        if (enemies[0]) {
+          const st = getCharStats('muk');
+          const dmg = Math.round(st.atk * 0.9);
+          playSynthSound('slash');
+          applyDamageToEnemy(enemies[0], dmg, '#00f3ff', false);
+          addSlashEffect(heroes[0].x + 12, heroes[0].y - 14, clickX, clickY, '#00f3ff', 'slash');
+        }
+      });
+    }
+
+    function toggleTopManagementPanel(collapse) {
+      state.topPanelCollapsed = collapse;
+      const panel = document.getElementById('topManagementPanel');
+      const arrow = document.getElementById('toggleArrowIcon');
+      const label = document.getElementById('togglePanelText');
+
+      if (collapse) {
+        panel.classList.add('hidden');
+        arrow.textContent = '🔼';
+        label.textContent = '메뉴';
+      } else {
+        panel.classList.remove('hidden');
+        arrow.textContent = '🔽';
+        label.textContent = '메뉴';
+      }
+    }
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.max(320, Math.floor(rect.width));
+      canvas.height = 136;
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+
+    window.onload = () => {
+      resizeCanvas();
+      buildPartyEntities();
+      spawnWaveEnemies();
+      bindEvents();
+      updateAllUI();
+
+      function loop(now) {
+        const dt = Math.min(0.1, (now - lastFrameTime) / 1000);
+        lastFrameTime = now;
+        updateBattle(dt);
+        drawBattleScene();
+        if (Math.floor(now / 300) !== Math.floor((now - dt * 1000) / 300)) {
+          updateTopBarUI();
+        }
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+    };
+  </script>
+</body>
+</html>
